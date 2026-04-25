@@ -15,4 +15,7 @@ logging.basicConfig(
 
 )
 
+if __name__ == "__main__":
+    logging.info("Logger is set up and ready to use.")
+
 
