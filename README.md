@@ -33,31 +33,38 @@ Predicting breast cancer survival is complex due to multiple clinical factors, a
 ```
 Breast_Cancer_Detection/
 │
-├── artifacts/                # Generated files (datasets, models, preprocessor)
+├── ├── artifacts/                # Generated files (datasets, models, preprocessor)
 │   ├── data.csv
 │   ├── train.csv
 │   ├── test.csv
-│   ├── / feature_columns.pkl
+|   ├── model.pkl
+│   ├── preprocessor.pkl
+│   ├── feature_columns.pkl
 │   └── breast_cancer_best_model.pkl
 │
 ├── notebooks/               # Jupyter notebooks (EDA & experiments)
 │   ├── data/
 │   │    └── data.csv
-│   ├── 1. EDA_breast_cancer.ipynb
-│   └── 2. model_training_testing_breast_cancer.ipynb
+│   ├──  EDA.ipynb
+│   └──  model_trainer.ipynb
 │
 ├── src/
 │   ├── components/
 │   │    ├── data_ingestion.py
+|   |    ├── __init__.py
 │   │    ├── data_transformation.py
 │   │    └── model_trainer.py
+|   |          
 │   │
 │   ├── pipeline/
-│   │    └── training_pipeline.py
-│   │
+│   │    ├── training_pipeline.py
+|   |    ├── predict_pipeline.py
+│   │    └── __init__.py
+|   |
 │   ├── exception.py
 │   ├── logger.py
 │   └── utils.py
+|   └── __init__.py
 │
 ├── venv/                    # Virtual environment
 ├── requirements.txt
@@ -163,7 +170,9 @@ After running the pipeline, the following files are generated:
 │   ├── data.csv
 │   ├── train.csv
 │   ├── test.csv
-│   ├── / feature_columns.pkl
+|   ├── model.pkl
+│   ├── preprocessor.pkl
+│   ├── feature_columns.pkl
 │   └── breast_cancer_best_model.pkl
 ```
 

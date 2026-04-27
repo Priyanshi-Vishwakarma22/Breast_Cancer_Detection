@@ -1,3 +1,14 @@
+import sys
+import os
+sys.path.append(os.path.abspath("."))
+
+from src.pipeline.train_pipline import TrainPipeline
+
+if __name__ == "__main__":
+    pipeline = TrainPipeline()
+    accuracy = pipeline.run_pipeline()
+    print(f"Final Accuracy: {accuracy}")
+
 from src.components.data_ingestion import DataIngestion
 from src.components.data_transformation import DataTransformation
 from src.components.model_trainer import ModelTrainer
@@ -19,3 +30,4 @@ if __name__ == "__main__":
     accuracy = trainer.initiate_model_trainer(X_train, X_test, y_train, y_test)
 
     print(f"Final Accuracy: {accuracy}")
+
