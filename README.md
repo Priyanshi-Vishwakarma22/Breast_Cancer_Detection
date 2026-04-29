@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> 62b350d4032bf7e81fa71aaca0b27c4d51b1c40b
 # IBM Project
 
 ### Software and tools requirements
