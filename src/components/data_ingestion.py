@@ -20,7 +20,7 @@ class DataIngestion:
         try:
             logging.info("Data ingestion started")
 
-            df = pd.read_csv("notebooks/data/data.csv")
+            df = pd.read_csv("notebook/data/data.csv")
 
             os.makedirs(os.path.dirname(self.config.train_data_path), exist_ok=True)
 
