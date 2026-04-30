@@ -85,9 +85,8 @@ class DataTransformation:
 
             logging.info('Read train and test data completed.')
 
-            logging.info('Obtaining processing object.')
-
-            preprocessing_obj = self.get_data_transformer_object()
+            train_df.replace('', np.nan, inplace=True)
+            test_df.replace('', np.nan, inplace=True)
 
             target_column = 'Patient_Status'
             numerical_columns = [
@@ -98,12 +97,40 @@ class DataTransformation:
                 'Protein4'
             ]
 
+            categorical_columns = [
+                'Gender',
+                'Tumour_Stage',
+                'Histology',
+                'ER status',
+                'PR status',
+                'HER2 status',
+                'Surgery_type'
+            ]
 
-            input_feature_train_df=train_df.drop(columns=[target_column],axis=1)
-            target_feature_train_df=train_df[target_column]
+            feature_columns = numerical_columns + categorical_columns
 
-            input_feature_test_df=test_df.drop(columns=[target_column],axis=1)
-            target_feature_test_df=test_df[target_column]
+            train_df = train_df.dropna(subset=[target_column]).reset_index(drop=True)
+            test_df = test_df.dropna(subset=[target_column]).reset_index(drop=True)
+
+            target_mapping = {
+                'Alive': 1,
+                'Dead': 0,
+            }
+
+            train_df[target_column] = train_df[target_column].map(target_mapping)
+            test_df[target_column] = test_df[target_column].map(target_mapping)
+
+            train_df = train_df.dropna(subset=[target_column]).reset_index(drop=True)
+            test_df = test_df.dropna(subset=[target_column]).reset_index(drop=True)
+
+            logging.info('Obtaining processing object.')
+            preprocessing_obj = self.get_data_transformer_object()
+
+            input_feature_train_df = train_df[feature_columns]
+            target_feature_train_df = train_df[target_column].astype(int)
+
+            input_feature_test_df = test_df[feature_columns]
+            target_feature_test_df = test_df[target_column].astype(int)
 
             logging.info(
                 f"Applying preprocessing object on training dataframe and testing dataframe."
@@ -113,9 +140,11 @@ class DataTransformation:
             input_feature_test_arr=preprocessing_obj.transform(input_feature_test_df)
 
             train_arr = np.c_[
-                input_feature_train_arr, np.array(target_feature_train_df)
+                input_feature_train_arr, np.array(target_feature_train_df, dtype=np.float64)
             ]
-            test_arr = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
+            test_arr = np.c_[
+                input_feature_test_arr, np.array(target_feature_test_df, dtype=np.float64)
+            ]
 
             logging.info(f"Saved preprocessing object.")
 
