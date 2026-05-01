@@ -115,8 +115,8 @@ def run_training_pipeline():
 
 
 if __name__ == '__main__':
-<<<<<<< HEAD
-    run_training_pipeline()
-=======
-    run_training_pipeline()
->>>>>>> ef3afeb384abbc4600888dd5b65dda72b188cd18
+    best_model_name,model_report=run_training_pipeline()
+    logging.info(f"Best model: {best_model_name}")
+    logging.info(f"Model performance report: {model_report}")
+    
+    
