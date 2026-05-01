@@ -9,11 +9,11 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
-from src.exception import CustomException
-from src.logger import logging
-from src.utils import save_object
-from src.components.data_ingestion import DataIngestion
-from src.components.data_transformation import DataTransformation
+from Breast_Cancer_Detection.src.exception import CustomException
+from Breast_Cancer_Detection.src.logger import logging
+from Breast_Cancer_Detection.src.utils import save_object
+from Breast_Cancer_Detection.src.components.data_ingestion import DataIngestion
+from Breast_Cancer_Detection.src.components.data_transformation import DataTransformation
 
 
 @dataclass

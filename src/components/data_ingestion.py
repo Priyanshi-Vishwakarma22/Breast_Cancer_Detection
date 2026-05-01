@@ -1,15 +1,15 @@
 import os
 import sys
-from  src.exception import CustomException
-from src.logger import logging
+from  Breast_Cancer_Detection.src.exception import CustomException
+from Breast_Cancer_Detection.src.logger import logging
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
 
 
-from src.components.data_transformation import DataTransformation
-from src.components.data_transformation import DataTransformationConfig
+from Breast_Cancer_Detection.src.components.data_transformation import DataTransformation
+from Breast_Cancer_Detection.src.components.data_transformation import DataTransformationConfig
 
 
 @dataclass

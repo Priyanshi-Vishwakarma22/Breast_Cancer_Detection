@@ -9,10 +9,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import os
 
-from src.exception import CustomException
-from src.logger import logging
+from Breast_Cancer_Detection.src.exception import CustomException
+from Breast_Cancer_Detection.src.logger import logging
 
-from src.utils import save_object
+from Breast_Cancer_Detection.src.utils import save_object
 
 
 @dataclass
