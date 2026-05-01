@@ -32,61 +32,51 @@ Predicting breast cancer survival is complex due to multiple clinical factors, a
 
 ## 🗂️ Project Structure
 
-Breast_cancer_detection/
-│
-├── artifacts/              # Saved outputs (models, processed data)
-│   ├── model.pkl
-│   ├── train.csv
-│   └── test.csv
-│
-├── notebooks/             # Jupyter notebooks (EDA, experiments)
-│   ├── EDA.ipynb
-│   └── Model_Training.ipynb
-│
-├── src/                   # Main source code (core logic)
-│   ├── __init__.py
-│
-│   ├── components/        # ML pipeline steps
-│   │   ├── data_ingestion.py
-│   │   ├── data_validation.py
-│   │   ├── data_transformation.py
-│   │   └── model_trainer.py
-│
-│   ├── pipeline/          # Pipeline execution
-│   │   ├── training_pipeline.py
-│   │   └── prediction_pipeline.py
-│
-│   ├── exception.py       # Custom exception handling
-│   ├── logger.py          # Logging system
-│   ├── utils.py           # Helper functions
-│
-├── templates/             # HTML templates (if web app)
-│   └── index.html
-│
-├── static/                # CSS, JS files (optional)
-│
-├── app.py                 # Flask / FastAPI app (API layer)
-│
-├── requirements.txt       # Dependencies
-├── setup.py               # Package setup
-├── .gitignore
-├── README.md
-└── config.yaml            # Config file (paths, params)
 
-
-
+```
 Breast_Cancer_Detection/
-├── app.py                    ← Flask backend
+│
+├── ├── artifacts/                # Generated files (datasets, models, preprocessor)
+│   ├── data.csv
+│   ├── train.csv
+│   ├── test.csv
+|   ├── model.pkl
+│   ├── preprocessor.pkl
+│   ├── feature_columns.pkl
+│   └── breast_cancer_best_model.pkl
+│
+├── notebooks/               # Jupyter notebooks (EDA & experiments)
+│   ├── data/
+│   │    └── data.csv
+│   ├──  EDA.ipynb
+│   └──  model_trainer.ipynb
+│
 ├── src/
-│   └── pipeline/
-│       └── predict_pipeline.py  ← Prediction logic
-├── templates/
-│   ├── index.html            ← Home page
-│   └── result.html           ← Result page
-└── static/
-    ├── css/
-    │   └── style.css         ← Custom styling
-    └── images/               ← Background etc
+│   ├── components/
+│   │    ├── data_ingestion.py
+|   |    ├── __init__.py
+│   │    ├── data_transformation.py
+│   │    └── model_trainer.py
+|   |          
+│   │
+│   ├── pipeline/
+│   │    ├── training_pipeline.py
+|   |    ├── predict_pipeline.py
+│   │    └── __init__.py
+|   |
+│   ├── exception.py
+│   ├── logger.py
+│   └── utils.py
+|   └── __init__.py
+│
+├── venv/                    # Virtual environment
+├── requirements.txt
+├── setup.py
+└── README.md
+```
+---
+
+
 ## ⚙️ Tech Stack
 
 * **Python 3.10**
