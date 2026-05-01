@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #A05AFF, #4BCBEB);
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 35px;
+            border-radius: 50px;
+            width: 440px;
+        }
+        h2 {
+            text-align: center;
+            color: #9E58FF;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 40px;
+        }
+        button {
+            background: #A05AFF;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+        .msg {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Create Account</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="pwd1" placeholder="Password (min 8)">
+        <input type="password" id="pwd2" placeholder="Confirm Password">
+        <button onclick="register()">Register</button>
+        <p style="text-align:center"><a href="login.html">Already have account? Login</a></p>
+        <div id="msg" class="msg"></div>
+    </div>
+    <script>
+        function register() {
+            var e = document.getElementById('email').value;
+            var u = document.getElementById('username').value;
+            var p1 = document.getElementById('pwd1').value;
+            var p2 = document.getElementById('pwd2').value;
+            var m = document.getElementById('msg');
+            if (e == "" || u == "" || p1 == "" || p2 == "") {
+                m.innerHTML = "All fields required";
+                m.style.color = "red";
+                return;
+            }
+            if (p1 != p2) {
+                m.innerHTML = "Passwords dont match";
+                m.style.color = "red";
+                return;
+            }
+            if (p1.length < 8) {
+                m.innerHTML = "Password too short";
+                m.style.color = "red";
+                return;
+            }
+            m.innerHTML = "Success! Redirecting...";
+            m.style.color = "green";
+            setTimeout(function() { window.location = "login.html"; }, 1500);
+        }
+    </script>
+</body>
+</html>
