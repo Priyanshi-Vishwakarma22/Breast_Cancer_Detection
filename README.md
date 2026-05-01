@@ -32,43 +32,46 @@ Predicting breast cancer survival is complex due to multiple clinical factors, a
 
 ## 🗂️ Project Structure
 
-```
-Student-Performance-Prediction/
+Breast_cancer_detection/
 │
-├── artifacts/                # Generated files (datasets, models, preprocessor)
-│   ├── data.csv
+├── artifacts/              # Saved outputs (models, processed data)
+│   ├── model.pkl
 │   ├── train.csv
-│   ├── test.csv
-│   ├── preprocessor.pkl
-│   └── model.pkl
+│   └── test.csv
 │
-├── notebooks/               # Jupyter notebooks (EDA & experiments)
-│   ├── data/
-│   │    └── stud.csv
-│   ├── 1. EDA STUDENT PERFORMANCE.ipynb
-│   └── 2. MODEL TRAINING.ipynb
+├── notebooks/             # Jupyter notebooks (EDA, experiments)
+│   ├── EDA.ipynb
+│   └── Model_Training.ipynb
 │
-├── src/
-│   ├── components/
-│   │    ├── data_ingestion.py
-│   │    ├── data_transformation.py
-│   │    └── model_trainer.py
-│   │
-│   ├── pipeline/
-│   │    └── training_pipeline.py
-│   │
-│   ├── exception.py
-│   ├── logger.py
-│   └── utils.py
+├── src/                   # Main source code (core logic)
+│   ├── __init__.py
 │
-├── venv/                    # Virtual environment
-├── requirements.txt
-├── setup.py
-└── README.md
-```
-
----
-
+│   ├── components/        # ML pipeline steps
+│   │   ├── data_ingestion.py
+│   │   ├── data_validation.py
+│   │   ├── data_transformation.py
+│   │   └── model_trainer.py
+│
+│   ├── pipeline/          # Pipeline execution
+│   │   ├── training_pipeline.py
+│   │   └── prediction_pipeline.py
+│
+│   ├── exception.py       # Custom exception handling
+│   ├── logger.py          # Logging system
+│   ├── utils.py           # Helper functions
+│
+├── templates/             # HTML templates (if web app)
+│   └── index.html
+│
+├── static/                # CSS, JS files (optional)
+│
+├── app.py                 # Flask / FastAPI app (API layer)
+│
+├── requirements.txt       # Dependencies
+├── setup.py               # Package setup
+├── .gitignore
+├── README.md
+└── config.yaml            # Config file (paths, params)
 ## ⚙️ Tech Stack
 
 * **Python 3.10**
