@@ -72,6 +72,21 @@ Breast_cancer_detection/
 ├── .gitignore
 ├── README.md
 └── config.yaml            # Config file (paths, params)
+
+
+
+Breast_Cancer_Detection/
+├── app.py                    ← Flask backend
+├── src/
+│   └── pipeline/
+│       └── predict_pipeline.py  ← Prediction logic
+├── templates/
+│   ├── index.html            ← Home page
+│   └── result.html           ← Result page
+└── static/
+    ├── css/
+    │   └── style.css         ← Custom styling
+    └── images/               ← Background etc
 ## ⚙️ Tech Stack
 
 * **Python 3.10**
