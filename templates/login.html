@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Breast Cancer Detection</title>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #A05AFF, #4BCBEB);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 50px;
+            width: 360px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            background: linear-gradient(135deg, #9E58FF, #1BCFBA);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            border: 2px solid #ddd;
+            border-radius: 40px;
+        }
+        .show-row {
+            text-align: left;
+            margin: -5px 0 15px 0;
+            font-size: 14px;
+        }
+        .show-row input {
+            width: auto;
+            margin-right: 6px;
+        }
+        button {
+            background: #A05AFF;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        a {
+            color: #A05AFF;
+            text-decoration: none;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Breast Cancer Detection</h1>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <div class="show-row">
+            <input type="checkbox" id="showPass" onclick="togglePassword()">
+            <label for="showPass">Show Password</label>
+        </div>
+        <button onclick="login()">Login</button>
+        <p><a href="/register">Create account</a></p>
+        <div id="errorMsg" class="error"></div>
+    </div>
+    <script>
+        function login() {
+            const loginData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+         };
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(loginData)
+           })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") window.location.href = "/dashboard";
+                else document.getElementById('errorMsg').innerHTML = data.message;
+            });
+      }
+    </script>
+</body>
+</html>
