@@ -2,47 +2,37 @@ import os
 import sys
 from dataclasses import dataclass
 
+import numpy as np
 from catboost import CatBoostClassifier
-from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import (
+    AdaBoostClassifier,
+    GradientBoostingClassifier,
+    RandomForestClassifier,
+)
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
+
 from src.exception import CustomException
 from src.logger import logging
-from src.utils import save_object
-from src.components.data_ingestion import DataIngestion
-from src.components.data_transformation import DataTransformation
+from src.utils import evaluate_models, save_object
 
 
 @dataclass
 class ModelTrainerConfig:
-    trained_model_file_path=os.path.join("artifacts", "model.pkl")
+    trained_model_file_path = os.path.join("artifacts", "model.pkl")
 
 
 class ModelTrainer:
     def __init__(self):
         self.model_trainer_config = ModelTrainerConfig()
 
-    def get_models(self):
-        return {
-            'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced'),
-            'Decision Tree': DecisionTreeClassifier(random_state=42, class_weight='balanced'),
-            'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced'),
-            'Gradient Boosting': GradientBoostingClassifier(random_state=42),
-            'AdaBoost': AdaBoostClassifier(random_state=42),
-            'KNN': KNeighborsClassifier(n_neighbors=7),
-            'CatBoost': CatBoostClassifier(
-                random_state=42,
-                verbose=0,
-                allow_writing_files=False
-),
-        }
-
-    def initiate_model_trainer(self, train_array, test_array, preprocessor_path):
+    def initiate_model_trainer(self, train_array, test_array):
         try:
             logging.info('Splitting training and test input data')
+
             X_train, y_train, X_test, y_test = (
                 train_array[:, :-1],
                 train_array[:, -1],
@@ -50,69 +40,110 @@ class ModelTrainer:
                 test_array[:, -1],
             )
 
-            models = self.get_models()
-            model_report = {}
-            best_model = None
-            best_model_name = None
-            best_score = -1.0
+            logging.info(f"X_train: {X_train.shape} | X_test: {X_test.shape}")
 
-            for name, model in models.items():
-                logging.info(f'Training model: {name}')
-                model.fit(X_train, y_train)
+            # class_weight='balanced' — dataset is imbalanced 
+            # Alive=255 (76%), Dead=66 (24%)
+            models = {
+                'Logistic Regression': LogisticRegression(
+                    max_iter=1000, random_state=42, class_weight='balanced'
+                ),
+                'Decision Tree': DecisionTreeClassifier(
+                    random_state=42, class_weight='balanced'
+                ),
+                'Random Forest': RandomForestClassifier(
+                    n_estimators=100, random_state=42, class_weight='balanced'
+                ),
+                'Gradient Boosting': GradientBoostingClassifier(
+                    n_estimators=100, random_state=42
+                ),
+                'AdaBoost': AdaBoostClassifier(
+                    n_estimators=100, random_state=42
+                ),
+                'KNN': KNeighborsClassifier(
+                    n_neighbors=7
+                ),
 
-                y_pred = model.predict(X_test)
-                current_f1 = f1_score(y_test, y_pred, average='weighted', zero_division=0)
+            
+                #  CatBoost auto handles imbalance
+                'CatBoost': CatBoostClassifier(
+                    random_state=42,
+                    verbose=0,
+                    auto_class_weights='Balanced'
+                ),
+            }
 
-                model_report[name] = {
-                    'accuracy': accuracy_score(y_test, y_pred),
-                    'precision': precision_score(y_test, y_pred, average='weighted', zero_division=0),
-                    'recall': recall_score(y_test, y_pred, average='weighted', zero_division=0),
-                    'f1_score': current_f1,
-                }
+            
+            params = {
+                'Logistic Regression': {
+                    'C': [0.1, 1.0, 10.0],
+                    'solver': ['lbfgs', 'liblinear']
+                },
+                'Decision Tree': {
+                    'max_depth': [3, 5, 7, None],
+                    'min_samples_split': [2, 5, 10]
+                },
+                'Random Forest': {
+                    'n_estimators': [50, 100, 200],
+                    'max_depth': [3, 5, None]
+                },
+                'Gradient Boosting': {
+                    'n_estimators': [50, 100],
+                    'learning_rate': [0.05, 0.1, 0.2]
+                },
+                'AdaBoost': {
+                    'n_estimators': [50, 100],
+                    'learning_rate': [0.5, 1.0]
+                },
+                'KNN': {
+                    'n_neighbors': [3, 5, 7, 9]
+                },
+                'XGBoost': {
+                    'n_estimators': [50, 100],
+                    'learning_rate': [0.05, 0.1],
+                    'max_depth': [3, 5]
+                },
+                'CatBoost': {
+                    'iterations': [100, 200],
+                    'learning_rate': [0.05, 0.1]
+                },
+            }
 
-                logging.info(f'{name} test F1: {current_f1:.4f}')
+           
+            model_report = evaluate_models(
+                X_train=X_train,
+                y_train=y_train,
+                X_test=X_test,
+                y_test=y_test,
+                models=models,
+                params=params
+            )
 
-                if current_f1 > best_score:
-                    best_score = current_f1
-                    best_model = model
-                    best_model_name = name
+           
+            best_model_name = max(model_report, key=lambda x: model_report[x]['f1_score'])
+            best_model_score = model_report[best_model_name]['f1_score']
+            best_model = models[best_model_name]
 
-            if best_model is None:
-                raise CustomException('No model was trained successfully.', sys)
+            if best_model_score < 0.6:
+                raise CustomException("No best model found with acceptable F1 score", sys)
 
+            logging.info(f"Best model: {best_model_name} | F1 Score: {best_model_score}")
+
+            
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
                 obj=best_model,
             )
 
-            logging.info(f'Best model: {best_model_name} with F1 score {best_score:.4f}')
+        
+            logging.info("=" * 50)
+            logging.info("MODEL COMPARISON REPORT")
+            logging.info("=" * 50)
+            for name, metrics in model_report.items():
+                logging.info(f"{name}: {metrics}")
+
             return best_model_name, best_model, model_report
 
         except Exception as e:
             raise CustomException(e, sys)
 
-
-def run_training_pipeline():
-    try:
-        data_ingestion = DataIngestion()
-        train_path, test_path = data_ingestion.initiate_data_ingestion()
-
-        data_transformation = DataTransformation()
-        train_array, test_array, preprocessor_path = data_transformation.initiate_data_transformation(
-            train_path, test_path
-        )
-
-        model_trainer = ModelTrainer()
-        best_model_name, best_model, model_report = model_trainer.initiate_model_trainer(
-            train_array, test_array, preprocessor_path
-        )
-
-        logging.info(f"Training pipeline completed. Best model saved to {model_trainer.model_trainer_config.trained_model_file_path}")
-        logging.info(f"Best model: {best_model_name}")
-        return best_model_name, model_report
-    except Exception as e:
-        raise CustomException(e, sys)
-
-
-if __name__ == '__main__':
-    run_training_pipeline()
