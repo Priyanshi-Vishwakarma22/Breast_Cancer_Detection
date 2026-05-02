@@ -32,45 +32,49 @@ Predicting breast cancer survival is complex due to multiple clinical factors, a
 ## 🗂️Project Structure
 
 ```
-Breast_Cancer_Detection/
-│
-├── ├── artifacts/                # Generated files (datasets, models, preprocessor)
-│   ├── data.csv
-│   ├── train.csv
-│   ├── test.csv
-|   ├── model.pkl
-│   ├── preprocessor.pkl
-│   ├── feature_columns.pkl
-│   └── breast_cancer_best_model.pkl
-│
-├── notebooks/               # Jupyter notebooks (EDA & experiments)
-│   ├── data/
-│   │    └── data.csv
-│   ├──  EDA.ipynb
-│   └──  model_trainer.ipynb
-│
-├── src/
-│   ├── components/
-│   │    ├── data_ingestion.py
-|   |    ├── __init__.py
-│   │    ├── data_transformation.py
-│   │    └── model_trainer.py
-|   |          
-│   │
-│   ├── pipeline/
-│   │    ├── training_pipeline.py
-|   |    ├── predict_pipeline.py
-│   │    └── __init__.py
-|   |
-│   ├── exception.py
-│   ├── logger.py
-│   └── utils.py
-|   └── __init__.py
-│
-├── venv/                    # Virtual environment
-├── requirements.txt
-├── setup.py
-└── README.md
+FY Project/
+└── Breast_Cancer_Detection/
+    ├── artifacts/
+    ├── logs/
+    ├── mlproject.egg-info/
+    ├── notebook/
+    │   ├── data/
+    │   ├── 1 EDA.ipynb
+    │   └── 2 Model_trainer.ipynb
+    │
+    ├── src/
+    │   ├── __pycache__/
+    │   │
+    │   ├── components/
+    │   │   ├── __init__.py
+    │   │   ├── data_ingestion.py
+    │   │   ├── data_transformation.py
+    │   │   └── model_trainer.py
+    │   │
+    │   ├── pipeline/
+    │   │   ├── __pycache__/
+    │   │   ├── __init__.py
+    │   │   ├── predict_pipeline.py
+    │   │   └── train_pipeline.py
+    │   │
+    │   ├── __init__.py
+    │   ├── exception.py
+    │   ├── logger.py
+    │   └── utils.py
+    │
+    ├── templates/
+    │   ├── about.html
+    │   ├── dashboard.html
+    │   ├── login.html
+    │   └── register.html
+    │
+    ├── venv/
+    ├── .gitignore
+    ├── LICENSE
+    ├── README.md
+    ├── requirements.txt
+    ├── setup.py
+    └── users.db
 ```
 ---
 
