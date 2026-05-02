@@ -86,6 +86,111 @@
         .chart-container { position: relative; height: 300px; width: 100%; }
 
         @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+        .heatmap-grid {
+        display: grid;
+        grid-template-columns: 50px 1fr 1fr; /* Labels + 2 Columns */
+        grid-template-rows: auto 1fr 1fr;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    /* Column Headers */
+    .col-header {
+        text-align: center;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #22d3ee;
+        padding-bottom: 10px;
+    }
+
+    /* Row Header (PREDICTED) */
+    .row-header {
+        grid-row: 2 / span 2;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        text-align: center;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #6366f1;
+    }
+
+    .matrix-box {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px 5px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 90px;
+    }
+
+    .matrix-box .num {
+        font-size: 1.5rem;
+        font-weight: 800;
+        display: block;
+    }
+
+    .matrix-box .txt {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        opacity: 0.7;
+        margin-top: 5px;
+        line-height: 1.2;
+    }
+
+    /* Specific box colors to help guide the eye */
+    .tp-box { border-color: #6366f1; background: rgba(99, 102, 241, 0.1); }
+    .tn-box { border-color: #22d3ee; background: rgba(34, 211, 238, 0.1); }
+        
+        .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns only */
+    gap: 20px;
+}
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.metric-item {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+}
+
+.m-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.m-value {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 5px 0;
+}
+
+.m-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.m-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+}
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -101,7 +206,7 @@
         <!-- Input Panel -->
         <div class="card">
             <h3>Patient Diagnostics</h3>
-            <div class="input-row">
+            <div class="top-row">
                 <div class="field"><label>Age</label><input type="number" id="age" value="58"></div>
                 <div class="field">
                     <label>Tumour Stage</label>
@@ -134,58 +239,65 @@
         <!-- Replace the "Accuracy Chart Panel" or add this section at the bottom of your .container -->
 
 <div class="grid">
-    <!-- Model Confusion Matrix Heatmap -->
-    <div class="card">
-        <h3>Evaluation Heatmap</h3>
-        <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px;">Predicted vs. Actual Survival Outcomes</p>
+    <!-- Evaluation Heatmap Card -->
+<div class="card" style="flex: 1; display: flex; flex-direction: column;">
+    <h3>Evaluation Heatmap</h3>
+    <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px;">Predicted vs. Actual Survival Outcomes</p>
+    
+    <!-- Changed grid-template-columns to use 1fr to fill space -->
+    <div style="display: grid; grid-template-columns: 40px 1fr 1fr; gap: 15px; text-align: center; flex-grow: 1;">
         
-        <div style="display: grid; grid-template-columns: 40px 1fr 1fr; gap: 10px; text-align: center;">
-            <div></div>
-            <div style="font-size: 0.7rem; color: var(--accent); font-weight: 800;">ACTUAL ALIVE</div>
-            <div style="font-size: 0.7rem; color: var(--accent); font-weight: 800;">ACTUAL DEAD</div>
-            
-            <div style="writing-mode: vertical-lr; transform: rotate(180deg); font-size: 0.7rem; color: var(--primary); font-weight: 800;">PRED.</div>
+        <!-- Header Row -->
+        <div></div>
+        <div style="font-size: 0.7rem; color: var(--accent); font-weight: 800; letter-spacing: 1px;">ACTUAL ALIVE</div>
+        <div style="font-size: 0.7rem; color: var(--accent); font-weight: 800; letter-spacing: 1px;">ACTUAL DEAD</div>
+        
+        <!-- Sidebar Label -->
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <div style="writing-mode: vertical-lr; transform: rotate(180deg); font-size: 0.7rem; color: var(--primary); font-weight: 800; letter-spacing: 1px;">PREDICTED</div>
+        </div>
+        
+        <!-- Matrix Grid (Wrapped in its own 2x2 grid to ensure equal sizing) -->
+        <div style="grid-column: 2 / span 2; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15px;">
             
             <!-- True Positive -->
-            <div style="background: rgba(99, 102, 241, 0.3); border: 2px solid var(--primary); padding: 25px; border-radius: 15px; position: relative;">
-                <span style="font-size: 1.5rem; font-weight: 800; display: block;">210</span>
-                <span style="font-size: 0.6rem; color: var(--text-dim);">TRUE POSITIVE</span>
+            <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid var(--primary); padding: 30px 10px; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span style="font-size: 2rem; font-weight: 800; display: block; color: #fff;">210</span>
+                <span style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">TRUE POSITIVE</span>
             </div>
             
             <!-- False Positive -->
-            <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); padding: 25px; border-radius: 15px;">
-                <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--text-dim);">15</span>
-                <span style="font-size: 0.6rem; color: var(--text-dim);">FALSE POSITIVE</span>
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 30px 10px; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span style="font-size: 2rem; font-weight: 800; display: block; color: rgba(255,255,255,0.5);">15</span>
+                <span style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">FALSE POSITIVE</span>
             </div>
-
-            <div></div> <!-- Spacer -->
-
+            
             <!-- False Negative -->
-            <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); padding: 25px; border-radius: 15px;">
-                <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--text-dim);">28</span>
-                <span style="font-size: 0.6rem; color: var(--text-dim);">FALSE NEGATIVE</span>
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 30px 10px; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span style="font-size: 2rem; font-weight: 800; display: block; color: rgba(255,255,255,0.5);">28</span>
+                <span style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">FALSE NEGATIVE</span>
             </div>
-
+            
             <!-- True Negative -->
-            <div style="background: rgba(34, 211, 238, 0.2); border: 2px solid var(--accent); padding: 25px; border-radius: 15px;">
-                <span style="font-size: 1.5rem; font-weight: 800; display: block;">45</span>
-                <span style="font-size: 0.6rem; color: var(--text-dim);">TRUE NEGATIVE</span>
+            <div style="background: rgba(34, 211, 238, 0.1); border: 1px solid var(--accent); padding: 30px 10px; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span style="font-size: 2rem; font-weight: 800; display: block; color: #fff;">45</span>
+                <span style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">TRUE NEGATIVE</span>
             </div>
         </div>
     </div>
-     
 </div>
         <!-- Doughnut Chart Panel -->
         <div class="card">
+            <div class="bottom-row">
             <h3>Population Outcome</h3>
             <div class="chart-container">
                 <canvas id="doughnutChart"></canvas>
             </div>
         </div>
     </div>
-
+     <div style="display: flex; gap: 20px; align-items: stretch; margin-bottom: 20px;">
     <!-- Line Chart Panel -->
-    <div class="card">
+    <div class="card" style="flex: 1; margin: 0;">
         <h3>Model Accuracy Convergence</h3>
         <div class="chart-container" style="height: 250px;">
             <canvas id="lineChart"></canvas>
@@ -193,6 +305,56 @@
     </div>
 </div>
 
+
+<div class="card metrics-card" style="flex: 1; margin: 0;" >
+    <h3>| Key Performance Indicators</h3>
+
+    <div class="metrics-grid">
+
+        <div class="metric-item">
+
+            <span class="m-label">Precision</span>
+
+            <span class="m-value">0.92</span>
+
+            <div class="m-bar"><div class="fill" style="width: 92%"></div></div>
+
+        </div>
+
+        <div class="metric-item">
+
+            <span class="m-label">Recall</span>
+
+            <span class="m-value">0.88</span>
+
+            <div class="m-bar"><div class="fill" style="width: 88%"></div></div>
+
+        </div>
+
+        <div class="metric-item">
+
+            <span class="m-label">F1-Score</span>
+
+            <span class="m-value">0.90</span>
+
+            <div class="m-bar"><div class="fill" style="width: 90%"></div></div>
+
+        </div>
+
+        <div class="metric-item">
+
+            <span class="m-label">ROC AUC</span>
+
+            <span class="m-value">0.94</span>
+
+            <div class="m-bar"><div class="fill" style="width: 94%"></div></div>
+
+        </div>
+
+    </div>
+</div>
+</div>
+</div>  
 <script>
     function predict() {
         const res = document.getElementById('result');
