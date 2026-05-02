@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 
-=======
->>>>>>> ef3afeb384abbc4600888dd5b65dda72b188cd18
 # IBM Project
 
 ### Software and tools requirements
