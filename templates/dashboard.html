@@ -191,10 +191,22 @@
     height: 100%;
     background: linear-gradient(90deg, var(--primary), var(--accent));
 }
+.menu-btn{position:fixed;top:20px;left:20px;background:#A05AFF;color:white;border:none;border-radius:50%;width:48px;height:48px;font-size:26px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.15);z-index:25;display:flex;align-items:center;justify-content:center;}
+        .sidebar{position:fixed;top:0;left:-250px;width:250px;height:100%;background:#2c2c54;transition:0.3s;padding-top:50px;z-index:20;}
+        .sidebar.open{left:0;}
+        .sidebar a{display:block;padding:12px 20px;color:white;text-decoration:none;border-bottom:1px solid #4a4a7a;}
+        .sidebar a:hover{background:#A05AFF;}
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+<div class="sidebar" id="sidebar">
+    <button class="close" onclick="closeSide()">✕</button>
+    <a href="about.html">About</a>
+    <a href="#" onclick="logout()">Logout</a>
+</div>
+<div class="overlay" id="overlay" onclick="closeSide()"></div>
+<button class="menu-btn" onclick="toggleSide()">☰</button>
 
 <div class="container">
     <div class="card" style="text-align: center; border-bottom: 4px solid var(--primary);">
@@ -356,6 +368,17 @@
 </div>
 </div>  
 <script>
+     function toggleSide(){
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('active');
+    }
+    function closeSide(){
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('overlay').classList.remove('active');
+    }
+    function logout(){
+        window.location.href = 'login.html';
+    }
     function predict() {
         const res = document.getElementById('result');
         const prob = document.getElementById('probValue');
