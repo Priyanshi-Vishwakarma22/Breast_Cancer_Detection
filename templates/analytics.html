@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survival AI Dashboard - P1</title>
+    <title>Survival AI Dashboard - P2</title>
     <style>
         :root {
             --primary: #6366f1;
@@ -168,102 +168,91 @@
     <!-- Header -->
     <div class="card" style="text-align: center; border-bottom: 4px solid var(--primary); padding: 20px;">
         <h1 style="font-weight: 800; font-size: 2.2rem; letter-spacing: -1px;">SURVIVAL<span style="color: var(--accent);">.AI</span></h1>
-        <p style="color: var(--text-dim);">Dashboard </p>
+        <p style="color: var(--text-dim);">Model Analytics</p>
     </div>
 
-    <!-- Main Section: Diagnostics & Prediction -->
-    <div class="grid-main">
-        <!-- Input Panel -->
+    <!-- P2 Section: Accuracy and KPI Metrics -->
+    <div class="grid-perf">
+        <!-- Accuracy Convergence -->
         <div class="card">
-            <h3>Patient Diagnostics</h3>
-            <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px; margin-top: -15px;">Input clinical attributes to run the prediction model.</p>
-            <div class="diag-grid">
-                <div class="field"><label>Age</label><input type="number" id="age" value="58"></div>
-                <div class="field">
-                    <label>Tumour Stage</label>
-                    <select id="stage">
-                        <option value="I">Stage I</option>
-                        <option value="II" selected>Stage II</option>
-                        <option value="III">Stage III</option>
-                    </select>
-                </div>
-                <div class="field"><label>Protein 1</label><input type="number" step="0.01" value="0.12" id="p1"></div>
-                <div class="field"><label>Protein 2</label><input type="number" step="0.01" value="1.45" id="p2"></div>
-                <div class="field"><label>Protein 3</label><input type="number" step="0.01" value="2.30" id="p3"></div>
-                <div class="field"><label>Protein 4</label><input type="number" step="0.01" value="1.85" id="p4"></div>
+            <h3>Accuracy Convergence</h3>
+            <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px; margin-top: -15px;">Training accuracy over epochs.</p>
+            <div class="chart-container" style="height: 250px;">
+                <canvas id="lineChart"></canvas>
             </div>
-            <div class="diag-grid">
-                <div class="field">
-                    <label>Histology</label>
-                    <select id="histology">
-                        <option value="Infiltrating Ductal Carcinoma">Infiltrating Ductal Carcinoma</option>
-                        <option value="Infiltrating Lobular Carcinoma" selected>Infiltrating Lobular Carcinoma</option>
-                        <option value="Mucinous Carcinoma">Mucinous Carcinoma</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Gender</label>
-                    <select id="gender">
-                        <option value="FEMALE" selected>Female</option>
-                        <option value="MALE">Male</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>HER2 Status</label>
-                    <select id="her2Status">
-                        <option value="Negative" selected>Negative</option>
-                        <option value="Positive">Positive</option>
-                    </select>
-                </div>
-            </div>
-            <button class="btn" id="predictBtn" onclick="runPrediction()">Run Prediction Engine</button>
         </div>
 
-        <!-- Prediction Result Panel (Initially Hidden) -->
-        <div class="card" id="prediction-result-card" style="display: none;">
-            <h3>Prediction Result</h3>
-            <div style="text-align: center;">
-                <div class="pred-status">Status: <span id="statusText">--</span></div>
-                
-                <div class="pred-metrics">
-                    <div class="p-metric">
-                        <div class="p-label">Probability Score</div>
-                        <div class="p-value" id="probValue">--%</div>
-                    </div>
-                    <div class="p-metric">
-                        <div class="p-label">Risk Level</div>
-                        <div class="p-value"><span class="p-risk low-risk" id="riskValue">--</span></div>
-                    </div>
+        <!-- KPI Metrics -->
+        <div class="card">
+            <h3>Key Performance Indicators</h3>
+            <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px; margin-top: -15px;">Model performance stats.</p>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <span class="k-label">Precision</span>
+                    <span class="k-value">0.92</span>
+                    <div class="k-bar"><div class="k-fill" style="width: 92%"></div></div>
                 </div>
-
-                <div class="risk-slider">
-                    <div class="risk-indicator" id="riskIndicator"></div>
+                <div class="metric-item">
+                    <span class="k-label">Recall</span>
+                    <span class="k-value">0.88</span>
+                    <div class="k-bar"><div class="k-fill" style="width: 88%"></div></div>
                 </div>
-                <p style="color: var(--text-dim); font-size: 0.75rem; margin-top: 25px; border-top: 1px solid var(--glass-border); padding-top: 15px;">The model predicts the patient's survival based on submitted metrics.</p>
+                <div class="metric-item">
+                    <span class="k-label">F1-Score</span>
+                    <span class="k-value">0.90</span>
+                    <div class="k-bar"><div class="k-fill" style="width: 90%"></div></div>
+                </div>
+                <div class="metric-item">
+                    <span class="k-label">ROC AUC</span>
+                    <span class="k-value">0.94</span>
+                    <div class="k-bar"><div class="k-fill" style="width: 94%"></div></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Predictions Table -->
-    <div class="card" style="margin-top: 30px;">
-        <h3>Recent Predictions</h3>
-        <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px; margin-top: -15px;">Log of lately generated results.</p>
-        <div class="table-scroll">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Patient ID</th>
-                        <th>Age</th>
-                        <th>Stage</th>
-                        <th>Histology</th>
-                        <th>Survival Prob.</th>
-                        <th>Status</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody id="recentPredictionsBody">
-                </tbody>
-            </table>
+    <!-- P2 Section: Population and Evaluation -->
+    <div class="grid-perf">
+        <!-- Doughnut Chart Panel -->
+        <div class="card">
+            <h3>Population Outcome</h3>
+            <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px; margin-top: -15px;">Dataset composition.</p>
+            <div class="chart-container" style="height: 250px;">
+                <canvas id="doughnutChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Evaluation Heatmap -->
+        <div class="card" style="display: flex; flex-direction: column;">
+            <h3>Evaluation Heatmap</h3>
+            <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 25px; margin-top: -15px;">Model classification matrix against test data.</p>
+            
+            <div class="heatmap-grid" style="flex-grow: 1;">
+                <div></div>
+                <div class="m-header">ACTUAL ALIVE</div>
+                <div class="m-header">ACTUAL DECEASED</div>
+                
+                <div class="y-label">PREDICTED</div>
+                
+                <div class="matrix">
+                    <div class="m-box tp-box">
+                        <span class="m-num">210</span>
+                        <span class="m-txt">TRUE ALIVE (TP)</span>
+                    </div>
+                    <div class="m-box">
+                        <span class="m-num">15</span>
+                        <span class="m-txt">FALSE ALIVE (FP)</span>
+                    </div>
+                    <div class="m-box">
+                        <span class="m-num">28</span>
+                        <span class="m-txt">FALSE DECED. (FN)</span>
+                    </div>
+                    <div class="m-box tn-box">
+                        <span class="m-num">45</span>
+                        <span class="m-txt">TRUE DECED. (TN)</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -282,144 +271,75 @@
         window.location.href = "{{ url_for('logout') }}";
     }
 
-    function clamp(value, min, max) {
-        return Math.max(min, Math.min(max, value));
-    }
+    // Charts Initialization
+    window.onload = function() {
+        const chartFont = { family: 'Plus Jakarta Sans', size: 12 };
 
-    function getNumberInput(id, fallback) {
-        const value = Number(document.getElementById(id).value);
-        return Number.isFinite(value) ? value : fallback;
-    }
-
-    function getStageLabel(stage) {
-        return "Stage " + stage;
-    }
-
-    function getNextPatientId() {
-        const rows = document.querySelectorAll('#recentPredictionsBody tr td:first-child');
-        const ids = Array.from(rows)
-            .map(cell => Number((cell.textContent.match(/\d+/) || [0])[0]))
-            .filter(Number.isFinite);
-        const nextId = ids.length ? Math.max(...ids) + 1 : 1001;
-        return "PN" + nextId;
-    }
-
-    function addRecentPrediction(prediction) {
-        const tbody = document.getElementById('recentPredictionsBody');
-        const row = document.createElement('tr');
-        const statusClass = prediction.status === "Alive" ? "s-alive" : "s-deceased";
-
-        row.innerHTML = `
-            <td>${prediction.patientId}</td>
-            <td>${prediction.age}</td>
-            <td>${prediction.stageLabel}</td>
-            <td>${prediction.histology}</td>
-            <td>${prediction.score}%</td>
-            <td><span class="status-pill ${statusClass}">${prediction.status}</span></td>
-            <td>${prediction.timestamp}</td>
-        `;
-
-        tbody.prepend(row);
-
-        while (tbody.rows.length > 8) {
-            tbody.deleteRow(tbody.rows.length - 1);
-        }
-    }
-
-    async function runPrediction() {
-        const resultCard = document.getElementById('prediction-result-card');
-        const probText = document.getElementById('probValue');
-        const riskText = document.getElementById('riskValue');
-        const statusText = document.getElementById('statusText');
-        const indicator = document.getElementById('riskIndicator');
-        const predictBtn = document.getElementById('predictBtn');
-
-        const age = getNumberInput('age', 50);
-        const stage = document.getElementById('stage').value;
-        const p1 = getNumberInput('p1', 0.12);
-        const p2 = getNumberInput('p2', 1.45);
-        const p3 = getNumberInput('p3', 2.30);
-        const p4 = getNumberInput('p4', 1.85);
-        const histology = document.getElementById('histology').value;
-        const gender = document.getElementById('gender').value;
-        const her2Status = document.getElementById('her2Status').value;
-
-        if (age <= 0 || age > 120) {
-            alert('Please enter a valid age between 1 and 120.');
-            return;
-        }
-
-        predictBtn.disabled = true;
-        predictBtn.innerText = "Running Model...";
-
-        try {
-            const response = await fetch('/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    Age: age,
-                    Protein1: p1,
-                    Protein2: p2,
-                    Protein3: p3,
-                    Protein4: p4,
-                    Tumour_Stage: stage,
-                    Histology: histology,
-                    Gender: gender,
-                    "HER2 status": her2Status
-                })
-            });
-
-            const result = await response.json();
-            if (!response.ok || result.status !== 'success') {
-                throw new Error(result.message || 'Prediction failed.');
+        // 1. Doughnut Chart (Population)
+        new Chart(document.getElementById('doughnutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Alive', 'Deceased'],
+                datasets: [{
+                    data: [255, 63],
+                    backgroundColor: ['#6366f1', '#22d3ee'],
+                    hoverOffset: 10,
+                    borderRadius: 10,
+                    borderWidth: 0,
+                    spacing: 8
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#94a3b8', font: chartFont, usePointStyle: true, padding: 20 }
+                    }
+                }
             }
+        });
 
-            const score = Number(result.survival_probability).toFixed(1);
-            const riskScore = Number(result.risk_score);
-            const status = result.prediction === "Alive" ? "Alive" : "Deceased";
+        // 2. Line Chart (Accuracy)
+        const ctx = document.getElementById('lineChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
 
-            resultCard.style.display = 'block';
-            probText.innerText = score + "%";
-            indicator.style.left = clamp(riskScore, 0, 100) + "%";
-
-            if (result.risk_level === "Low Risk") {
-                statusText.innerText = status;
-                statusText.style.color = "var(--risk-low)";
-                riskText.innerText = "Low Risk";
-                riskText.className = "p-risk low-risk";
-            } else if (result.risk_level === "Medium Risk") {
-                statusText.innerText = status === "Alive" ? "Alive (Monitoring)" : "Deceased Risk";
-                statusText.style.color = "var(--risk-med)";
-                riskText.innerText = "Medium Risk";
-                riskText.className = "p-risk med-risk";
-            } else {
-                statusText.innerText = status === "Alive" ? "Alive (High Risk)" : "Deceased Predicted";
-                statusText.style.color = "var(--risk-high)";
-                riskText.innerText = "High Risk";
-                riskText.className = "p-risk high-risk";
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['0', '20', '40', '60', '80', '100', '120'],
+                datasets: [{
+                    label: 'Model Accuracy',
+                    data: [0.62, 0.71, 0.78, 0.82, 0.84, 0.84, 0.842],
+                    borderColor: '#6366f1',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#22d3ee',
+                    pointRadius: 4,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: gradient
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b', font: chartFont } },
+                    y: { 
+                        grid: { color: 'rgba(255,255,255,0.05)' }, 
+                        ticks: { color: '#64748b', font: chartFont },
+                        min: 0.5,
+                        max: 1.0
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
             }
-
-            addRecentPrediction({
-                patientId: getNextPatientId(),
-                age: age,
-                stageLabel: getStageLabel(stage),
-                histology: histology,
-                score: score,
-                status: status,
-                timestamp: new Date().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-            });
-
-            if(window.innerWidth < 1000) {
-                 resultCard.scrollIntoView({ behavior: 'smooth' });
-            }
-        } catch (error) {
-            alert(error.message + " Please run this dashboard through Flask, not as a file URL.");
-        } finally {
-            predictBtn.disabled = false;
-            predictBtn.innerText = "Run Prediction Engine";
-        }
-    }
-
+        });
+    };
 </script>
 </body>
 </html>

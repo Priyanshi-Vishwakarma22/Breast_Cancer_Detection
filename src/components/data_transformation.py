@@ -42,10 +42,7 @@ class DataTransformation:
                 'Gender',
                 'Tumour_Stage',
                 'Histology',
-                'ER status',
-                'PR status',
                 'HER2 status',
-                'Surgery_type'
             ]
 
             num_pipeline = Pipeline([
@@ -101,10 +98,7 @@ class DataTransformation:
                 'Gender',
                 'Tumour_Stage',
                 'Histology',
-                'ER status',
-                'PR status',
                 'HER2 status',
-                'Surgery_type'
             ]
 
             feature_columns = numerical_columns + categorical_columns
