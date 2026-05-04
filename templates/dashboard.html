@@ -419,7 +419,24 @@
             predictBtn.innerText = "Run Prediction Engine";
         }
     }
+// ================= LOAD FROM DATABASE =================
+async function loadPredictionsFromBackend() {
+    try {
+        const response = await fetch('/get_predictions');
+        const data = await response.json();
 
+        const tbody = document.getElementById('recentPredictionsBody');
+        tbody.innerHTML = "";
+
+        data.forEach(pred => {
+            addRecentPrediction(pred);
+        });
+
+    } catch (error) {
+        console.error("Error loading predictions:", error);
+    }
+}
+window.onload = loadPredictionsFromBackend;
 </script>
 </body>
 </html>

@@ -1,16 +1,19 @@
+
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import pandas as pd
 import sqlite3
 import pickle
 from pathlib import Path
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key' # Required for sessions
+app.secret_key = 'your_secret_key'
+
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / 'artifacts' / 'model.pkl'
 PREPROCESSOR_PATH = BASE_DIR / 'artifacts' / 'preprocessor.pkl'
+
 model = None
 preprocessor = None
 
@@ -26,73 +29,111 @@ FEATURE_COLUMNS = [
     'HER2 status',
 ]
 
-
+# ================= LOAD MODEL =================
 def load_prediction_artifacts():
     global model, preprocessor
 
     if model is None:
-        with open(MODEL_PATH, 'rb') as model_file:
-            model = pickle.load(model_file)
+        with open(MODEL_PATH, 'rb') as f:
+            model = pickle.load(f)
 
     if preprocessor is None:
-        with open(PREPROCESSOR_PATH, 'rb') as preprocessor_file:
-            preprocessor = pickle.load(preprocessor_file)
+        with open(PREPROCESSOR_PATH, 'rb') as f:
+            preprocessor = pickle.load(f)
 
     return model, preprocessor
 
 
 def get_alive_probability(model_obj, transformed_data, prediction):
     if hasattr(model_obj, 'predict_proba'):
-        probabilities = model_obj.predict_proba(transformed_data)[0]
+        probs = model_obj.predict_proba(transformed_data)[0]
         classes = list(model_obj.classes_)
 
         if 1 in classes:
-            return float(probabilities[classes.index(1)])
-        if 1.0 in classes:
-            return float(probabilities[classes.index(1.0)])
+            return float(probs[classes.index(1)])
 
     return 1.0 if int(prediction) == 1 else 0.0
 
-# Database setup
+
+# ================= DATABASE =================
 def init_db():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS users 
-                      (id INTEGER PRIMARY KEY, email TEXT, username TEXT, password TEXT)''')
+
+    # USERS TABLE
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT,
+        username TEXT UNIQUE,
+        password TEXT
+    )
+    ''')
+
+    # PREDICTIONS TABLE
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS predictions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        age INTEGER,
+        stage TEXT,
+        histology TEXT,
+        probability REAL,
+        status TEXT,
+        timestamp TEXT
+    )
+    ''')
+
     conn.commit()
     conn.close()
 
+
 init_db()
 
+
+# ================= ROUTES =================
 @app.route('/')
 def home():
     return redirect(url_for('login'))
 
+
+# -------- REGISTER --------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         data = request.get_json()
+
         hashed_pw = generate_password_hash(data['password'])
-        
+
         try:
             conn = sqlite3.connect('users.db')
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO users (email, username, password) VALUES (?, ?, ?)",
-                           (data['email'], data['username'], hashed_pw))
+
+            cursor.execute('''
+            INSERT INTO users (email, username, password)
+            VALUES (?, ?, ?)
+            ''', (data['email'], data['username'], hashed_pw))
+
             conn.commit()
+            conn.close()
+
             return jsonify({"status": "success"})
+
         except:
             return jsonify({"status": "error", "message": "User already exists"})
-        finally:
-            conn.close()
+
     return render_template('register.html')
 
+
+# -------- LOGIN --------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         data = request.get_json()
+
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
+
         cursor.execute("SELECT * FROM users WHERE username=?", (data['username'],))
         user = cursor.fetchone()
         conn.close()
@@ -100,31 +141,45 @@ def login():
         if user and check_password_hash(user[3], data['password']):
             session['user'] = user[2]
             return jsonify({"status": "success"})
+
         return jsonify({"status": "error", "message": "Invalid Credentials"})
+
     return render_template('login.html')
 
+
+# -------- DASHBOARD --------
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
+
     return render_template('dashboard.html', username=session['user'])
 
+
+# -------- ANALYTICS --------
 @app.route('/analytics')
 def analytics():
     if 'user' not in session:
         return redirect(url_for('login'))
+
     return render_template('analytics.html', username=session['user'])
 
+
+# -------- ABOUT --------
 @app.route('/about')
 def about():
     if 'user' not in session:
         return redirect(url_for('login'))
+
     return render_template('about.html', username=session['user'])
 
+
+# ================= PREDICT =================
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        data = request.get_json() or {}
+        data = request.get_json()
+
         patient_data = {
             'Age': float(data.get('Age', 0)),
             'Protein1': float(data.get('Protein1', 0)),
@@ -133,19 +188,22 @@ def predict():
             'Protein4': float(data.get('Protein4', 0)),
             'Gender': data.get('Gender', 'FEMALE'),
             'Tumour_Stage': data.get('Tumour_Stage', 'II'),
-            'Histology': data.get('Histology', 'Infiltrating Ductal Carcinoma'),
+            'Histology': data.get('Histology', ''),
             'HER2 status': data.get('HER2 status', 'Negative'),
         }
 
         if patient_data['Age'] <= 0 or patient_data['Age'] > 120:
-            return jsonify({'status': 'error', 'message': 'Age must be between 1 and 120.'}), 400
+            return jsonify({'status': 'error', 'message': 'Invalid age'}), 400
 
-        input_df = pd.DataFrame([patient_data], columns=FEATURE_COLUMNS)
+        df = pd.DataFrame([patient_data], columns=FEATURE_COLUMNS)
+
         model_obj, preprocessor_obj = load_prediction_artifacts()
-        transformed_data = preprocessor_obj.transform(input_df)
-        prediction = model_obj.predict(transformed_data)[0]
-        alive_probability = get_alive_probability(model_obj, transformed_data, prediction)
-        survival_percent = round(alive_probability * 100, 1)
+        transformed = preprocessor_obj.transform(df)
+
+        prediction = model_obj.predict(transformed)[0]
+        prob = get_alive_probability(model_obj, transformed, prediction)
+
+        survival_percent = round(prob * 100, 1)
         status = 'Alive' if int(prediction) == 1 else 'Dead'
         risk_score = 100 - survival_percent
 
@@ -156,21 +214,78 @@ def predict():
         else:
             risk_level = 'High Risk'
 
+        # ===== SAVE TO DATABASE =====
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+
+        cursor.execute('''
+        INSERT INTO predictions (username, age, stage, histology, probability, status, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            session.get('user'),
+            patient_data['Age'],
+            patient_data['Tumour_Stage'],
+            patient_data['Histology'],
+            survival_percent,
+            status,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ))
+
+        conn.commit()
+        conn.close()
+
         return jsonify({
             'status': 'success',
             'prediction': status,
             'survival_probability': survival_percent,
-            'risk_score': round(risk_score, 1),
-            'risk_level': risk_level,
-            'patient': patient_data,
+            'risk_score': risk_score,
+            'risk_level': risk_level
         })
+
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+
+@app.route('/get_predictions')
+def get_predictions():
+    if 'user' not in session:
+        return jsonify([])
+
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    SELECT id, age, stage, histology, probability, status, timestamp
+    FROM predictions
+    WHERE username=?
+    ORDER BY id DESC LIMIT 8
+    ''', (session['user'],))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    data = []
+
+    for row in rows:
+        data.append({
+            "patientId": f"PN{row[0]}",
+            "age": row[1],
+            "stageLabel": "Stage " + row[2],
+            "histology": row[3],
+            "score": row[4],
+            "status": "Alive" if row[5] == "Alive" else "Deceased",
+            "timestamp": row[6]
+        })
+
+    return jsonify(data)
+
+# -------- LOGOUT --------
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
 
+
+# ================= RUN =================
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)    
