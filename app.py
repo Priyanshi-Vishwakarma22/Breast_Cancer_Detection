@@ -230,6 +230,7 @@ def predict():
             status,
             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ))
+        new_id = cursor.lastrowid
 
         conn.commit()
         conn.close()
@@ -239,7 +240,8 @@ def predict():
             'prediction': status,
             'survival_probability': survival_percent,
             'risk_score': risk_score,
-            'risk_level': risk_level
+            'risk_level': risk_level,
+            'id': new_id,
         })
 
     except Exception as e:
@@ -268,17 +270,58 @@ def get_predictions():
 
     for row in rows:
         data.append({
-            "patientId": f"PN{row[0]}",
-            "age": row[1],
-            "stageLabel": "Stage " + row[2],
-            "histology": row[3],
-            "score": row[4],
-            "status": "Alive" if row[5] == "Alive" else "Deceased",
-            "timestamp": row[6]
-        })
+    "id": row[0],                 # ✅ ADD THIS
+    "patientId": f"PN{row[0]}",   # (already there, keep it)
+    "age": row[1],
+    "stageLabel": "Stage " + row[2],
+    "histology": row[3],
+    "score": row[4],
+    "status": "Alive" if row[5] == "Alive" else "Deceased",
+    "timestamp": row[6]
+})
 
     return jsonify(data)
+@app.route('/delete_prediction/<int:id>', methods=['DELETE'])
+def delete_prediction(id):
+    if 'user' not in session:
+        return jsonify({'status': 'error'}), 403
 
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+
+    cursor.execute('DELETE FROM predictions WHERE id=? AND username=?',
+                   (id, session['user']))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'status': 'success'})
+@app.route('/edit_prediction/<int:id>', methods=['PUT'])
+def edit_prediction(id):
+    if 'user' not in session:
+        return jsonify({'status': 'error'}), 403
+
+    data = request.get_json()
+
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    UPDATE predictions
+    SET age=?, stage=?, histology=?
+    WHERE id=? AND username=?
+    ''', (
+        data['age'],
+        data['stage'],
+        data['histology'],
+        id,
+        session['user']
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'status': 'success'})
 # -------- LOGOUT --------
 @app.route('/logout')
 def logout():

@@ -149,6 +149,40 @@
         .close-btn { position: absolute; top: 20px; right: 20px; background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;}
 
         @media (max-width: 1000px) { .grid-main, .grid-perf, .grid-footer { grid-template-columns: 1fr; } }
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.actions button {
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+/* Edit */
+.edit-btn {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+}
+
+.edit-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Delete */
+.delete-btn {
+    background: linear-gradient(135deg, #ff4b2b, #ff416c);
+    color: white;
+}
+
+.delete-btn:hover {
+    transform: scale(1.05);
+}
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -259,9 +293,12 @@
                         <th>Survival Prob.</th>
                         <th>Status</th>
                         <th>Timestamp</th>
+                        <th>Actions</th>
+       
                     </tr>
                 </thead>
                 <tbody id="recentPredictionsBody">
+                
                 </tbody>
             </table>
         </div>
@@ -310,14 +347,22 @@
         const statusClass = prediction.status === "Alive" ? "s-alive" : "s-deceased";
 
         row.innerHTML = `
-            <td>${prediction.patientId}</td>
-            <td>${prediction.age}</td>
-            <td>${prediction.stageLabel}</td>
-            <td>${prediction.histology}</td>
-            <td>${prediction.score}%</td>
-            <td><span class="status-pill ${statusClass}">${prediction.status}</span></td>
-            <td>${prediction.timestamp}</td>
-        `;
+    <td>${prediction.patientId}</td>
+    <td>${prediction.age}</td>
+    <td>${prediction.stageLabel}</td>
+    <td>${prediction.histology}</td>
+    <td>${prediction.score}%</td>
+    <td><span class="status-pill ${statusClass}">${prediction.status}</span></td>
+    <td>${prediction.timestamp}</td>
+   <td class="actions">
+    <button class="edit-btn" onclick="editPatient(${prediction.id})">
+        ✏️ Edit
+    </button>
+    <button class="delete-btn" onclick="deletePatient(${prediction.id})">
+        🗑 Delete
+    </button>
+</td>
+`;
 
         tbody.prepend(row);
 
@@ -399,8 +444,9 @@
                 riskText.className = "p-risk high-risk";
             }
 
-            addRecentPrediction({
-                patientId: getNextPatientId(),
+           addRecentPrediction({
+                id: result.id,                     
+                patientId: "PN" + result.id,       
                 age: age,
                 stageLabel: getStageLabel(stage),
                 histology: histology,
@@ -437,6 +483,36 @@ async function loadPredictionsFromBackend() {
     }
 }
 window.onload = loadPredictionsFromBackend;
+async function deletePatient(id) {
+    if (!confirm("Delete this record?")) return;
+
+    await fetch(`/delete_prediction/${id}`, {
+        method: 'DELETE'
+    });
+
+    loadPredictionsFromBackend();
+}
+
+async function editPatient(id) {
+
+    const newAge = prompt("Enter new age:");
+    const newStage = prompt("Enter stage (I, II, III):");
+    const newHistology = prompt("Enter histology:");
+
+    if (!newAge || !newStage || !newHistology) return;
+
+    await fetch(`/edit_prediction/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            age: newAge,
+            stage: newStage,
+            histology: newHistology
+        })
+    });
+
+    loadPredictionsFromBackend();
+}
 </script>
 </body>
 </html>
