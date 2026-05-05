@@ -6,6 +6,11 @@ scikit-learn
 xgboost
 catboost
 dill
+imbalanced-learn
 flask
+cryptography       
+python-dotenv      
+werkzeug 
+cyptography
 
-#-e .
+-e .
