@@ -27,7 +27,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-change-this-in-product
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# ENCRYPTION SETUP
+# ── ENCRYPTION SETUP ──────────────────────────────────────────────────────────
 
 KEY_FILE = BASE_DIR / 'encryption.key'
 
@@ -70,12 +70,12 @@ def hash_patient_id(patient_id):
         return None
     return hashlib.sha256(f"patient_{patient_id}_salt_2024".encode()).hexdigest()[:16]
 
-#  DATABASE SETUP
+# ── DATABASE SETUP ────────────────────────────────────────────────────────────
 
 def init_db():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
-    
+
     # Users table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
@@ -86,7 +86,7 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
-    
+
     # Predictions table with encrypted fields
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS predictions (
@@ -110,14 +110,14 @@ def init_db():
         timestamp TEXT
     )
     ''')
-    
+
     conn.commit()
     conn.close()
     print("✅ Database initialized")
 
 init_db()
 
-# ROUTES 
+# ── ROUTES ────────────────────────────────────────────────────────────────────
 
 @app.route('/')
 def home():
@@ -177,99 +177,94 @@ def about():
 def predict():
     try:
         data = request.get_json()
-        print(f"📥 Received: {data}")
-        
-        # Validate age
+        logging.info(f"Received prediction request: {data}")
+
+        # ── Validate inputs ───────────────────────────────────────────────────
         age = float(data.get('Age', 0))
         if age <= 0 or age > 120:
             return jsonify({'status': 'error', 'message': 'Invalid age'}), 400
-        
-        # Get values
-        stage = data.get('Tumour_Stage', 'II')
-        p1 = float(data.get('Protein1', 0))
-        p2 = float(data.get('Protein2', 0))
-        p3 = float(data.get('Protein3', 0))
-        p4 = float(data.get('Protein4', 0))
-        her2 = data.get('HER2 status', 'Negative')
-        gender = data.get('Gender', 'FEMALE')
+
+        stage     = data.get('Tumour_Stage', 'II')
         histology = data.get('Histology', 'Infiltrating Ductal Carcinoma')
-        surgery = data.get('Surgery_type', 'Other')
-        
-        # Calculate risk score
-        risk_score = 0
-        
-        if age > 75:
-            risk_score += 30
-        elif age > 65:
-            risk_score += 15
-        
-        if stage == 'III':
-            risk_score += 30
-        elif stage == 'II':
-            risk_score += 10
-        
-        if p1 < -0.5:
-            risk_score += 10
-        if p2 < 0:
-            risk_score += 10
-        if p3 < -0.5:
-            risk_score += 10
-        if p4 < -0.5:
-            risk_score += 10
-        
-        if her2 == 'Positive':
-            risk_score += 15
-        
-        if gender == 'MALE':
-            risk_score += 10
-        
-        survival_percent = max(10, min(95, 95 - risk_score))
-        
-        if survival_percent >= 55:
-            status = 'Alive'
+        surgery   = data.get('Surgery_type', 'Other')
+        her2      = data.get('HER2 status', 'Negative')
+        gender    = data.get('Gender', 'FEMALE')
+        p1        = float(data.get('Protein1', 0))
+        p2        = float(data.get('Protein2', 0))
+        p3        = float(data.get('Protein3', 0))
+        p4        = float(data.get('Protein4', 0))
+
+        # ── Use ML model via PredictPipeline ─────────────────────────────────
+        custom_data = CustomData(
+            Age=int(age),
+            Gender=gender,
+            Protein1=p1,
+            Protein2=p2,
+            Protein3=p3,
+            Protein4=p4,
+            Tumour_Stage=stage,
+            Histology=histology,
+            HER2_status=her2,
+            Surgery_type=surgery,
+        )
+
+        features_df = custom_data.get_data_as_dataframe()
+
+        pipeline = PredictPipeline()
+        predictions, probabilities = pipeline.predict_with_proba(features_df)
+
+        # ── Parse results ─────────────────────────────────────────────────────
+        status = 'Alive' if predictions[0] == 1 else 'Dead'
+
+        if probabilities is not None:
+            prob_alive = float(probabilities[0][1]) * 100
         else:
-            status = 'Dead'
-        
-        risk_level = 'Low Risk' if survival_percent >= 70 else ('Medium Risk' if survival_percent >= 40 else 'High Risk')
-        
-        # Generate hashed patient ID
+            # Fallback if model doesn't support predict_proba
+            prob_alive = 75.0 if status == 'Alive' else 25.0
+
+        prob_alive = round(prob_alive, 1)
+        risk_score = round(100 - prob_alive, 1)
+
+        if prob_alive >= 70:
+            risk_level = 'Low Risk'
+        elif prob_alive >= 40:
+            risk_level = 'Medium Risk'
+        else:
+            risk_level = 'High Risk'
+
+        logging.info(f"Prediction: {status} | Survival: {prob_alive}% | Risk: {risk_level}")
+
+        # ── Encrypt diagnosis & save to DB ────────────────────────────────────
         patient_hash = hash_patient_id(str(age) + stage + str(datetime.now().timestamp()))
-        
-        # Encrypt diagnosis
-        encrypted_diagnosis = encrypt_data(f"Stage: {stage}, Histology: {histology}, HER2: {her2}, Surgery: {surgery}")
-        
-        # Save to database
+        encrypted_diagnosis = encrypt_data(
+            f"Stage: {stage}, Histology: {histology}, HER2: {her2}, Surgery: {surgery}"
+        )
+
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
-        
+
         # Ensure all columns exist
         cursor.execute("PRAGMA table_info(predictions)")
         columns = [col[1] for col in cursor.fetchall()]
-        
-        required_columns = ['surgery_type', 'protein1', 'protein2', 'protein3', 'protein4', 
-                           'her2_status', 'gender', 'risk_level', 'patient_hash', 'encrypted_diagnosis']
-        
+        required_columns = ['surgery_type', 'protein1', 'protein2', 'protein3', 'protein4',
+                            'her2_status', 'gender', 'risk_level', 'patient_hash', 'encrypted_diagnosis']
         for col in required_columns:
             if col not in columns:
                 cursor.execute(f'ALTER TABLE predictions ADD COLUMN {col} TEXT')
-        
+
         cursor.execute('''
-            INSERT INTO predictions 
-            (username, patient_hash, age, stage, histology, surgery_type, 
-             protein1, protein2, protein3, protein4, her2_status, gender, 
+            INSERT INTO predictions
+            (username, patient_hash, age, stage, histology, surgery_type,
+             protein1, protein2, protein3, protein4, her2_status, gender,
              probability, status, risk_level, encrypted_diagnosis, timestamp)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             session.get('user'),
             patient_hash,
-            age,
-            stage,
-            histology,
-            surgery,
+            age, stage, histology, surgery,
             p1, p2, p3, p4,
-            her2,
-            gender,
-            survival_percent,
+            her2, gender,
+            prob_alive,
             status,
             risk_level,
             encrypted_diagnosis,
@@ -278,25 +273,27 @@ def predict():
         new_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        
+
         return jsonify({
             'status': 'success',
             'prediction': status,
-            'survival_probability': survival_percent,
-            'risk_score': 100 - survival_percent,
+            'survival_probability': prob_alive,
+            'risk_score': risk_score,
             'risk_level': risk_level,
             'id': new_id,
         })
-        
+
     except Exception as e:
         traceback.print_exc()
+        logging.error(f"Prediction error: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 @app.route('/get_predictions')
 def get_predictions():
     if 'user' not in session:
         return jsonify([])
-    
+
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     cursor.execute('''
@@ -307,30 +304,31 @@ def get_predictions():
     ''', (session['user'],))
     rows = cursor.fetchall()
     conn.close()
-    
-    data = []
+
+    result = []
     for row in rows:
         decrypted_diagnosis = decrypt_data(row[8]) if len(row) > 8 and row[8] else "N/A"
-        
-        data.append({
-            "id": row[0],
-            "patientId": f"PN{row[0]}",
-            "age": row[1],
-            "stageLabel": "Stage " + row[2],
-            "histology": row[3],
-            "surgery_type": row[4] if len(row) > 4 else "N/A",
-            "score": row[5],
-            "status": row[6],
-            "timestamp": row[7],
-            "diagnosis": decrypted_diagnosis[:50] if decrypted_diagnosis else "N/A"
+        result.append({
+            "id":         row[0],
+            "patientId":  f"PN{row[0]}",
+            "age":        row[1],
+            "stageLabel": "Stage " + str(row[2]),
+            "histology":  row[3],
+            "surgery_type": row[4] if row[4] else "N/A",
+            "score":      row[5],
+            "probability": row[5],
+            "status":     row[6],
+            "timestamp":  row[7],
+            "diagnosis":  decrypted_diagnosis[:50] if decrypted_diagnosis else "N/A"
         })
-    return jsonify(data)
+    return jsonify(result)
+
 
 @app.route('/delete_prediction/<int:id>', methods=['DELETE'])
 def delete_prediction(id):
     if 'user' not in session:
         return jsonify({'status': 'error'}), 403
-    
+
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
     cursor.execute('DELETE FROM predictions WHERE id=? AND username=?', (id, session['user']))
@@ -338,16 +336,18 @@ def delete_prediction(id):
     conn.close()
     return jsonify({'status': 'success'})
 
+
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
 
+
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.get_json()
     msg = data.get('message', '').lower()
-    
+
     if "hello" in msg or "hi" in msg:
         reply = "Hello! I am your AI assistant. How can I help you?"
     elif "risk" in msg:
@@ -355,36 +355,36 @@ def chat():
     elif "stage" in msg:
         reply = "Cancer stages: Stage I (early), Stage II (locally advanced), Stage III (advanced)."
     elif "survival" in msg:
-        reply = "Survival probability shows chances of recovery."
+        reply = "Survival probability shows chances of recovery based on our ML model."
     elif "encryption" in msg or "privacy" in msg:
         reply = "All patient data is encrypted using AES-256. Passwords are hashed with bcrypt."
     elif "predict" in msg:
-        reply = "Fill the form and click 'Run Prediction' to get survival probability."
+        reply = "Fill the form and click 'Run Prediction' to get ML-based survival probability."
+    elif "model" in msg:
+        reply = "We use machine learning models trained on breast cancer patient data to predict survival."
     else:
         reply = "I can help with cancer stages, risk levels, survival prediction, and data privacy."
-    
+
     return jsonify({"reply": reply})
 
-#  HTTPS Support 
+
+# ── RUN ───────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
-    
-    print(" SURVIVAL.AI with Full Encryption")
-    
-    print("Password Hashing: Active (bcrypt)")
-    print(" Patient Data Encryption: Active (AES-256)")
-    print("Patient ID Hashing: Active (SHA-256)")
-    print(" URL: http://127.0.0.1:5000")
-    
-    
-    # Check for SSL certificates
+    print("SURVIVAL.AI — ML Powered Breast Cancer Prediction")
+    print("Password Hashing   : Active (bcrypt)")
+    print("Data Encryption    : Active (AES-256)")
+    print("Patient ID Hashing : Active (SHA-256)")
+    print("ML Model           : Active (trained model.pkl)")
+    print("URL                : http://127.0.0.1:5000")
+
     cert_file = BASE_DIR / 'cert.pem'
-    key_file = BASE_DIR / 'key.pem'
-    
+    key_file  = BASE_DIR / 'key.pem'
+
     if cert_file.exists() and key_file.exists():
-        print(" Running with HTTPS (SSL)")
-        app.run(debug=True, host='0.0.0.0', port=443, ssl_context=(str(cert_file), str(key_file)))
+        print("Running with HTTPS (SSL)")
+        app.run(debug=True, host='0.0.0.0', port=443,
+                ssl_context=(str(cert_file), str(key_file)))
     else:
-        print(" Running with HTTP (no SSL certificates found)")
-        print(" For HTTPS, run: openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365")
+        print("Running with HTTP")
         app.run(debug=True, host='127.0.0.1', port=5000)
