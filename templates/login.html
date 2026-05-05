@@ -71,7 +71,7 @@
 </head>
 <body>
     <div class="card">
-        <h1>Breast Cancer Detection</h1>
+        <h1>SURVIVAL.AI</h1>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
         <div class="show-row">
@@ -83,23 +83,28 @@
         <div id="errorMsg" class="error"></div>
     </div>
     <script>
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+        }
+        
         function login() {
             const loginData = {
                 username: document.getElementById('username').value,
                 password: document.getElementById('password').value
-         };
-
+            };
+            
             fetch('/login', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(loginData)
-           })
+            })
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") window.location.href = "/dashboard";
                 else document.getElementById('errorMsg').innerHTML = data.message;
             });
-      }
+        }
     </script>
 </body>
 </html>

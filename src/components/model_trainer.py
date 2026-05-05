@@ -82,7 +82,7 @@ class ModelTrainer:
 
                 # Overfitting check
                 if train_acc - test_acc > 0.1:
-                    print("  ⚠️  Warning: Possible Overfitting!")
+                    print("  Warning: Possible Overfitting!")
 
                 results[name] = {
                     "model":     model,
@@ -133,10 +133,10 @@ class ModelTrainer:
                 "Naive Bayes":   GaussianNB(),
             }
 
-            # ── Train & evaluate all models ───────────────────────────────
+            # Train & evaluate all models
             results = self.evaluate_models(X_train, y_train, X_test, y_test, models)
 
-            # ── Best model — F1 score se select karo ─────────────────────
+            #  Best model
             best_model_name = max(results, key=lambda x: results[x]['f1'])
             best_model      = results[best_model_name]['model']
             best_f1         = results[best_model_name]['f1']
@@ -145,7 +145,7 @@ class ModelTrainer:
             if best_f1 < 0.60:
                 raise CustomException("No model achieved acceptable F1 score (>60%).", sys)
 
-            # ── Final report ──────────────────────────────────────────────
+            # Final report 
             y_pred = best_model.predict(X_test)
 
             print("\n" + "=" * 60)
@@ -157,11 +157,10 @@ class ModelTrainer:
             print(classification_report(y_test, y_pred, target_names=['Dead', 'Alive']))
             print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
 
-            # ── Save best model ───────────────────────────────────────────
+            # Save best model 
             save_object(self.config.trained_model_file_path, best_model)
             logging.info(f"Best model saved → {self.config.trained_model_file_path}")
 
-            # ✅ (score, name) return — data_ingestion.py se match karta hai
             return best_f1, best_model_name
 
         except Exception as e:

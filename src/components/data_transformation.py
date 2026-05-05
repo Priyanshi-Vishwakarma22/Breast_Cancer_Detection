@@ -65,13 +65,13 @@ class DataTransformation:
             test_df  = pd.read_csv(test_path)
             logging.info("Train and test data loaded successfully.")
 
-            # ── 1. Cleaning ───────────────────────────────────────────────
+            # Cleaning
             cols_to_drop = ['ER status', 'PR status']
             train_df = train_df.drop(columns=cols_to_drop)
             test_df  = test_df.drop(columns=cols_to_drop)
             logging.info(f"Dropped constant columns: {cols_to_drop}")
 
-            # ── 2. Feature Engineering ────────────────────────────────────
+            # Feature Engineering
             train_df['Date_of_Surgery']    = pd.to_datetime(train_df['Date_of_Surgery'],    format='%d-%b-%y', errors='coerce')
             train_df['Date_of_Last_Visit'] = pd.to_datetime(train_df['Date_of_Last_Visit'], format='%d-%b-%y', errors='coerce')
             test_df['Date_of_Surgery']     = pd.to_datetime(test_df['Date_of_Surgery'],     format='%d-%b-%y', errors='coerce')
@@ -80,7 +80,7 @@ class DataTransformation:
             train_df['Survived_days'] = (train_df['Date_of_Last_Visit'] - train_df['Date_of_Surgery']).dt.days
             test_df['Survived_days']  = (test_df['Date_of_Last_Visit']  - test_df['Date_of_Surgery']).dt.days
 
-            # Sirf train ka median use karo — data leakage rokne ke liye
+            
             survived_median = train_df['Survived_days'].median()
             train_df['Survived_days'] = train_df['Survived_days'].fillna(survived_median)
             test_df['Survived_days']  = test_df['Survived_days'].fillna(survived_median)
@@ -89,7 +89,7 @@ class DataTransformation:
             test_df  = test_df.drop(columns=['Date_of_Surgery', 'Date_of_Last_Visit'])
             logging.info("Survived_days feature created. Date columns dropped.")
 
-            # ── 3. Ordinal encode Tumour_Stage ────────────────────────────
+            # Ordinal encode Tumour_Stage
             stage_map = {'I': 1, 'II': 2, 'III': 3}
             train_df['Tumour_Stage_Encoded'] = train_df['Tumour_Stage'].map(stage_map)
             test_df['Tumour_Stage_Encoded']  = test_df['Tumour_Stage'].map(stage_map)
@@ -97,7 +97,7 @@ class DataTransformation:
             test_df  = test_df.drop(columns=['Tumour_Stage'])
             logging.info("Tumour_Stage ordinal-encoded (I=1, II=2, III=3).")
 
-            # ── 4. Encode target ──────────────────────────────────────────
+            # Encode target 
             target_column = 'Patient_Status'
             label_map = {'Alive': 1, 'Dead': 0}
 
@@ -108,13 +108,13 @@ class DataTransformation:
             X_test  = test_df.drop(columns=[target_column])
             logging.info("Target encoded: Alive=1, Dead=0.")
 
-            # ── 5. Fit & Transform ────────────────────────────────────────
+            # Fit & Transform
             preprocessor_obj = self.get_data_transformer_object()
             X_train_arr = preprocessor_obj.fit_transform(X_train)
             X_test_arr  = preprocessor_obj.transform(X_test)
             logging.info("Preprocessor fitted on train and applied on test.")
 
-            # ── 6. SMOTE — sirf train pe ──────────────────────────────────
+            # SMOTE
             smote = SMOTE(random_state=42)
             X_train_balanced, y_train_balanced = smote.fit_resample(X_train_arr, y_train)
             logging.info(
@@ -122,11 +122,11 @@ class DataTransformation:
                 f"Class counts: {np.bincount(y_train_balanced)}"
             )
 
-            # ── 7. Stack features + target ────────────────────────────────
+            # Stack features + target
             train_arr = np.c_[X_train_balanced, np.array(y_train_balanced)]
             test_arr  = np.c_[X_test_arr,       np.array(y_test)]
 
-            # ── 8. Save preprocessor ──────────────────────────────────────
+            # Save preprocessor
             save_object(
                 file_path=self.data_transformation_config.preprocessor_obj_file_path,
                 obj=preprocessor_obj,
