@@ -64,6 +64,7 @@ FY Project/
     │
     ├── templates/
     │   ├── about.html
+    |   ├── analytics.html
     │   ├── dashboard.html
     │   ├── login.html
     │   └── register.html
