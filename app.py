@@ -7,8 +7,11 @@ from pathlib import Path
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
+
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / 'artifacts' / 'model.pkl'
@@ -329,6 +332,34 @@ def logout():
     return redirect(url_for('login'))
 
 
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.get_json()
+    msg = data.get('message', '').lower()
+
+    # simple AI logic
+    if "hello" in msg or "hi" in msg:
+        reply = "Hello! I am your AI assistant. How can I help you?"
+
+    elif "risk" in msg:
+        reply = "Risk depends on survival probability: >70% Low, 40–70% Medium, <40% High."
+
+    elif "stage" in msg:
+        reply = "Cancer stages indicate severity. Stage I is early, Stage III is advanced."
+
+    elif "survival" in msg:
+        reply = "Survival probability shows chances of recovery. Higher is better."
+
+    elif "treatment" in msg:
+        reply = "Treatment depends on stage and patient condition. Consult a doctor for exact advice."
+
+    elif "predict" in msg:
+        reply = "Use the prediction form above to analyze patient data."
+
+    else:
+        reply = "I can help with risk, survival, cancer stages, and predictions."
+
+    return jsonify({"reply": reply})
 # ================= RUN =================
 if __name__ == '__main__':
     app.run(debug=True)    
