@@ -364,6 +364,14 @@
                         <option value="Positive">Positive</option>
                     </select>
                 </div>
+                <div class="field">
+    <label>Surgery Type</label>
+    <select id="surgeryType">
+        <option value="Lumpectomy">Lumpectomy</option>
+        <option value="Mastectomy">Mastectomy</option>
+        <option value="None">None</option>
+    </select>
+</div>
             </div>
             <button class="btn" id="predictBtn" onclick="runPrediction()">Run Prediction Engine</button>
         </div>
@@ -405,6 +413,7 @@
                         <th>Age</th>
                         <th>Stage</th>
                         <th>Histology</th>
+                        <th>Surgery</th>
                         <th>Survival Prob.</th>
                         <th>Status</th>
                         <th>Timestamp</th>
@@ -466,6 +475,7 @@
     <td>${prediction.age}</td>
     <td>${prediction.stageLabel}</td>
     <td>${prediction.histology}</td>
+<td>${prediction.surgery}</td>
     <td>${prediction.score}%</td>
     <td><span class="status-pill ${statusClass}">${prediction.status}</span></td>
     <td>${prediction.timestamp}</td>
@@ -503,6 +513,9 @@
         const histology = document.getElementById('histology').value;
         const gender = document.getElementById('gender').value;
         const her2Status = document.getElementById('her2Status').value;
+        const surgeryType = document.getElementById('surgeryType').value;
+
+    
 
         if (age <= 0 || age > 120) {
             alert('Please enter a valid age between 1 and 120.');
@@ -525,7 +538,8 @@
                     Tumour_Stage: stage,
                     Histology: histology,
                     Gender: gender,
-                    "HER2 status": her2Status
+                    "HER2 status": her2Status,
+                    "Surgery_Type": surgeryType,
                 })
             });
 
@@ -560,15 +574,16 @@
             }
 
            addRecentPrediction({
-                id: result.id,                     
-                patientId: "PN" + result.id,       
-                age: age,
-                stageLabel: getStageLabel(stage),
-                histology: histology,
-                score: score,
-                status: status,
-                timestamp: new Date().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-            });
+    id: result.id,
+    patientId: "PN" + result.id,
+    age: age,
+    stageLabel: getStageLabel(stage),
+    histology: histology,
+    surgery: surgeryType,   // ✅ ADD THIS
+    score: score,
+    status: status,
+    timestamp: new Date().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+});
 
             if(window.innerWidth < 1000) {
                  resultCard.scrollIntoView({ behavior: 'smooth' });

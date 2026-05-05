@@ -30,6 +30,7 @@ FEATURE_COLUMNS = [
     'Tumour_Stage',
     'Histology',
     'HER2 status',
+    'Surgery_Type'
 ]
 
 # ================= LOAD MODEL =================
@@ -193,6 +194,7 @@ def predict():
             'Tumour_Stage': data.get('Tumour_Stage', 'II'),
             'Histology': data.get('Histology', ''),
             'HER2 status': data.get('HER2 status', 'Negative'),
+            'Surgery_Type': data.get('Surgery_Type', 'Lumpectomy')
         }
 
         if patient_data['Age'] <= 0 or patient_data['Age'] > 120:
