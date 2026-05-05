@@ -29,13 +29,14 @@
 </head>
 <body>
 <div class="sidebar" id="sidebar">
-    <button class="close" onclick="closeSide()">✕</button>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="about.html">About</a>
-    <a href="#" onclick="logout()">Logout</a>
+    <button class="close" onclick="closeSide()">&times;</button>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('analytics') }}">Model Analytics</a>
+    <a href="{{ url_for('about') }}">About</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
 </div>
 <div class="overlay" id="overlay" onclick="closeSide()"></div>
-<button class="menu-btn" onclick="toggleSide()">☰</button>
+<button class="menu-btn" onclick="toggleSide()">&#9776;</button>
 
 <div class="container">
     <div class="about-header">
@@ -76,7 +77,7 @@
         document.getElementById('overlay').classList.remove('active');
     }
     function logout(){
-        window.location.href = 'login.html';
+        window.location.href = "{{ url_for('logout') }}";
     }
 </script>
 </body>

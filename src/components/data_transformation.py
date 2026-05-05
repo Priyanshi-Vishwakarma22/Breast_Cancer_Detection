@@ -1,140 +1,143 @@
-# import sys
-# import os
-# from dataclasses import dataclass
+import os
+import sys
+import numpy as np
+import pandas as pd
+from dataclasses import dataclass
 
-# import numpy as np
-# import pandas as pd
-# from sklearn.compose import ColumnTransformer
-# from sklearn.impute import SimpleImputer
-# from sklearn.pipeline import Pipeline
-# from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, StandardScaler
-# from imblearn.over_sampling import SMOTE
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from imblearn.over_sampling import SMOTE
 
-# from src.exception import CustomException
-# from src.logger import logging
-# from src.utils import save_object
-
-
-# @dataclass
-# class DataTransformationConfig:
-#     preprocessor_obj_file_path = os.path.join('artifacts', 'preprocessor.pkl')
+from src.exception import CustomException
+from src.logger import logging
+from src.utils import save_object
 
 
-# class DataTransformation:
-#     def __init__(self):
-#         self.data_transformation_config = DataTransformationConfig()
-
-#     def get_data_transformer_object(self):
-#         try:
-           
-#             numerical_columns = [
-#                 'Age', 'Protein1', 'Protein2', 'Protein3', 'Protein4'
-#             ]
-
-#             # Baaki categorical
-#             categorical_columns = [
-#                 'Gender', 'Histology', 'HER2 status', 'Surgery_type','Tumour_Stage'
-#             ]
-
-#             # Numerical pipeline
-#             num_pipeline = Pipeline(steps=[
-#                 ('imputer', SimpleImputer(strategy='median')),
-#                 ('scaler', StandardScaler())
-#             ])
+@dataclass
+class DataTransformationConfig:
+    preprocessor_obj_file_path: str = os.path.join('artifacts', 'preprocessor.pkl')
 
 
-#             cat_pipeline = Pipeline(steps=[
-#                 ('imputer', SimpleImputer(strategy='most_frequent')),
-#                 ('onehot', OneHotEncoder(handle_unknown='ignore')),
-#                 ('scaler', StandardScaler(with_mean=False))
-#             ])
+class DataTransformation:
+    def __init__(self):
+        self.data_transformation_config = DataTransformationConfig()
 
-#             logging.info(f"Numerical columns  : {numerical_columns}")
-#             logging.info(f"Categorical columns: {categorical_columns}")
+    def get_data_transformer_object(self):
+        try:
+            numerical_columns = [
+                'Age', 'Protein1', 'Protein2', 'Protein3', 'Protein4',
+                'Survived_days', 'Tumour_Stage_Encoded'
+            ]
 
-#             preprocessor = ColumnTransformer(transformers=[
-#                 ('num_pipeline',     num_pipeline,     numerical_columns),
-#                 ('ordinal_pipeline', ordinal_pipeline, ordinal_columns),
-#                 ('cat_pipeline',     cat_pipeline,     categorical_columns),
-#             ])
+            categorical_columns = [
+                'Surgery_type', 'Histology', 'Gender', 'HER2 status'
+            ]
 
-#             return preprocessor
+            num_pipeline = Pipeline(steps=[
+                ('imputer', SimpleImputer(strategy='median')),
+                ('scaler',  StandardScaler()),
+            ])
 
-#         except Exception as e:
-#             raise CustomException(e, sys)
+            cat_pipeline = Pipeline(steps=[
+                ('imputer', SimpleImputer(strategy='most_frequent')),
+                ('onehot',  OneHotEncoder(handle_unknown='ignore', sparse_output=False)),
+                ('scaler',  StandardScaler(with_mean=False)),
+            ])
 
-#     def initiate_data_transformation(self, train_path, test_path):
-#         try:
-#             train_df = pd.read_csv(train_path)
-#             test_df  = pd.read_csv(test_path)
-#             logging.info('Read train and test data completed.')
+            preprocessor = ColumnTransformer(transformers=[
+                ('num_pipeline', num_pipeline, numerical_columns),
+                ('cat_pipeline', cat_pipeline, categorical_columns),
+            ])
 
-#             target_column_name = 'Patient_Status'
+            logging.info(f"Numerical columns  : {numerical_columns}")
+            logging.info(f"Categorical columns: {categorical_columns}")
 
-#             train_df = train_df.dropna(subset=[target_column_name])
-#             test_df  = test_df.dropna(subset=[target_column_name])
-#             logging.info("Dropped rows with missing Patient_Status.")
+            return preprocessor
 
-           
-#             train_df[target_column_name] = train_df[target_column_name].map({'Alive': 1, 'Dead': 0})
-#             test_df[target_column_name]  = test_df[target_column_name].map({'Alive': 1, 'Dead': 0})
-#             logging.info("Target encoded: Alive=1, Dead=0")
+        except Exception as e:
+            raise CustomException(e, sys)
 
-            
-#             cols_to_drop = [
-#                 col for col in [
-#                     'ER status', 'PR status',
-#                     'Date_of_Surgery', 'Date_of_Last_Visit',
-#                     'Survived_days'
-#                 ]
-#                 if col in train_df.columns
-#             ]
-#             logging.info(f"Dropping columns: {cols_to_drop}")
+    def initiate_data_transformation(self, train_path, test_path):
+        try:
+            train_df = pd.read_csv(train_path)
+            test_df  = pd.read_csv(test_path)
+            logging.info("Train and test data loaded successfully.")
 
-#             input_feature_train_df  = train_df.drop(columns=[target_column_name] + cols_to_drop)
-#             target_feature_train_df = train_df[target_column_name]
+            # ── 1. Cleaning ───────────────────────────────────────────────
+            cols_to_drop = ['ER status', 'PR status']
+            train_df = train_df.drop(columns=cols_to_drop)
+            test_df  = test_df.drop(columns=cols_to_drop)
+            logging.info(f"Dropped constant columns: {cols_to_drop}")
 
-#             input_feature_test_df  = test_df.drop(columns=[target_column_name] + cols_to_drop)
-#             target_feature_test_df = test_df[target_column_name]
+            # ── 2. Feature Engineering ────────────────────────────────────
+            train_df['Date_of_Surgery']    = pd.to_datetime(train_df['Date_of_Surgery'],    format='%d-%b-%y', errors='coerce')
+            train_df['Date_of_Last_Visit'] = pd.to_datetime(train_df['Date_of_Last_Visit'], format='%d-%b-%y', errors='coerce')
+            test_df['Date_of_Surgery']     = pd.to_datetime(test_df['Date_of_Surgery'],     format='%d-%b-%y', errors='coerce')
+            test_df['Date_of_Last_Visit']  = pd.to_datetime(test_df['Date_of_Last_Visit'],  format='%d-%b-%y', errors='coerce')
 
-#             logging.info("Obtaining preprocessing object.")
-#             preprocessing_obj = self.get_data_transformer_object()
+            train_df['Survived_days'] = (train_df['Date_of_Last_Visit'] - train_df['Date_of_Surgery']).dt.days
+            test_df['Survived_days']  = (test_df['Date_of_Last_Visit']  - test_df['Date_of_Surgery']).dt.days
 
-#             logging.info("Applying preprocessing on train and test data.")
-#             input_feature_train_arr = preprocessing_obj.fit_transform(input_feature_train_df)
-#             input_feature_test_arr  = preprocessing_obj.transform(input_feature_test_df)
+            # Sirf train ka median use karo — data leakage rokne ke liye
+            survived_median = train_df['Survived_days'].median()
+            train_df['Survived_days'] = train_df['Survived_days'].fillna(survived_median)
+            test_df['Survived_days']  = test_df['Survived_days'].fillna(survived_median)
 
-           
-#             logging.info("Applying SMOTE to handle class imbalance.")
-#             logging.info(
-#                 f"Before SMOTE - Alive: {(target_feature_train_df == 1).sum()}, "
-#                 f"Dead: {(target_feature_train_df == 0).sum()}"
-#             )
+            train_df = train_df.drop(columns=['Date_of_Surgery', 'Date_of_Last_Visit'])
+            test_df  = test_df.drop(columns=['Date_of_Surgery', 'Date_of_Last_Visit'])
+            logging.info("Survived_days feature created. Date columns dropped.")
 
-#             smote = SMOTE(random_state=42)
-#             input_feature_train_arr, target_train_arr = smote.fit_resample(
-#                 input_feature_train_arr,
-#                 np.array(target_feature_train_df)
-#             )
+            # ── 3. Ordinal encode Tumour_Stage ────────────────────────────
+            stage_map = {'I': 1, 'II': 2, 'III': 3}
+            train_df['Tumour_Stage_Encoded'] = train_df['Tumour_Stage'].map(stage_map)
+            test_df['Tumour_Stage_Encoded']  = test_df['Tumour_Stage'].map(stage_map)
+            train_df = train_df.drop(columns=['Tumour_Stage'])
+            test_df  = test_df.drop(columns=['Tumour_Stage'])
+            logging.info("Tumour_Stage ordinal-encoded (I=1, II=2, III=3).")
 
-#             unique, counts = np.unique(target_train_arr, return_counts=True)
-#             logging.info(f"After SMOTE - Class distribution: {dict(zip(unique, counts))}")
+            # ── 4. Encode target ──────────────────────────────────────────
+            target_column = 'Patient_Status'
+            label_map = {'Alive': 1, 'Dead': 0}
 
-#             train_arr = np.c_[input_feature_train_arr, target_train_arr]
-#             test_arr  = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
+            y_train = train_df[target_column].map(label_map)
+            y_test  = test_df[target_column].map(label_map)
 
-#             logging.info("Preprocessing and SMOTE completed.")
+            X_train = train_df.drop(columns=[target_column])
+            X_test  = test_df.drop(columns=[target_column])
+            logging.info("Target encoded: Alive=1, Dead=0.")
 
-#             save_object(
-#                 file_path=self.data_transformation_config.preprocessor_obj_file_path,
-#                 obj=preprocessing_obj
-#             )
+            # ── 5. Fit & Transform ────────────────────────────────────────
+            preprocessor_obj = self.get_data_transformer_object()
+            X_train_arr = preprocessor_obj.fit_transform(X_train)
+            X_test_arr  = preprocessor_obj.transform(X_test)
+            logging.info("Preprocessor fitted on train and applied on test.")
 
-#             return (
-#                 train_arr,
-#                 test_arr,
-#                 self.data_transformation_config.preprocessor_obj_file_path,
-#             )
+            # ── 6. SMOTE — sirf train pe ──────────────────────────────────
+            smote = SMOTE(random_state=42)
+            X_train_balanced, y_train_balanced = smote.fit_resample(X_train_arr, y_train)
+            logging.info(
+                f"SMOTE applied. Balanced train shape: {X_train_balanced.shape} | "
+                f"Class counts: {np.bincount(y_train_balanced)}"
+            )
 
-#         except Exception as e:
-#             raise CustomException(e, sys)
+            # ── 7. Stack features + target ────────────────────────────────
+            train_arr = np.c_[X_train_balanced, np.array(y_train_balanced)]
+            test_arr  = np.c_[X_test_arr,       np.array(y_test)]
+
+            # ── 8. Save preprocessor ──────────────────────────────────────
+            save_object(
+                file_path=self.data_transformation_config.preprocessor_obj_file_path,
+                obj=preprocessor_obj,
+            )
+            logging.info(f"Preprocessor saved → {self.data_transformation_config.preprocessor_obj_file_path}")
+
+            return (
+                train_arr,
+                test_arr,
+                self.data_transformation_config.preprocessor_obj_file_path,
+            )
+
+        except Exception as e:
+            raise CustomException(e, sys)
