@@ -280,9 +280,10 @@ def get_predictions():
     "age": row[1],
     "stageLabel": "Stage " + row[2],
     "histology": row[3],
-    "score": row[4],
-    "status": "Alive" if row[5] == "Alive" else "Deceased",
-    "timestamp": row[6]
+    "surgery": row[4],
+    "score": row[5],
+    "status": "Alive" if row[6] == "Alive" else "Deceased",
+    "timestamp": row[7]
 })
 
     return jsonify(data)
