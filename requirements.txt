@@ -7,10 +7,8 @@ xgboost
 catboost
 dill
 imbalanced-learn
-flask
-cryptography       
+flask      
 python-dotenv      
 werkzeug 
-cyptography
 
--e .
+#-e .
