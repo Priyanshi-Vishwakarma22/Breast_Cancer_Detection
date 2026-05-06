@@ -1,4 +1,4 @@
- from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import pandas as pd
 import sqlite3
 import pickle
