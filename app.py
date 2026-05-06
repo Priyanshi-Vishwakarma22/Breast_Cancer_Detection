@@ -438,14 +438,13 @@ if __name__ == '__main__':
     print("✅ Diagnosis Encryption : Active (AES-256)")
     print("✅ Patient ID         : Plain Text (NOT encrypted)")
     print("✅ Manual Risk Rules  : Active")
-    print("📍 URL               : http://127.0.0.1:5000")
     print("="*50)
 
-    # Load model on startup
+    # Load model once
     load_prediction_artifacts()
-    
-    if __name__ == '__main__':
-        load_prediction_artifacts()
-    
+
+    # Render port
     port = int(os.environ.get("PORT", 10000))
+
+    # Start app
     app.run(host='0.0.0.0', port=port)
