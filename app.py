@@ -31,42 +31,6 @@ model = None
 preprocessor = None
 
 # ============ ENCRYPTION SETUP (Only for Diagnosis) ============
-
-KEY_FILE = BASE_DIR / 'encryption.key'
-
-def get_encryption_key():
-    """Get or create encryption key for patient diagnosis data"""
-    if KEY_FILE.exists():
-        with open(KEY_FILE, 'rb') as f:
-            return f.read()
-    else:
-        key = Fernet.generate_key()
-        with open(KEY_FILE, 'wb') as f:
-            f.write(key)
-        print("✅ New encryption key generated")
-        return key
-
-ENCRYPTION_KEY = get_encryption_key()
-cipher = Fernet(ENCRYPTION_KEY)
-
-def encrypt_data(text):
-    """Encrypt sensitive diagnosis data"""
-    if text is None or text == "":
-        return None
-    try:
-        return cipher.encrypt(text.encode()).decode()
-    except:
-        return text
-
-def decrypt_data(encrypted_text):
-    """Decrypt sensitive diagnosis data"""
-    if encrypted_text is None or encrypted_text == "":
-        return None
-    try:
-        return cipher.decrypt(encrypted_text.encode()).decode()
-    except:
-        return encrypted_text
-
 # ============ LOAD MODEL ============
 
 def load_prediction_artifacts():
