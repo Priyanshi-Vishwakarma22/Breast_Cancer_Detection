@@ -445,7 +445,7 @@ if __name__ == '__main__':
     load_prediction_artifacts()
     
     if __name__ == '__main__':
-    load_prediction_artifacts()
+        load_prediction_artifacts()
     
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
