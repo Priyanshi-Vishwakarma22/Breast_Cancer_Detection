@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+ from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import pandas as pd
 import sqlite3
 import pickle
@@ -444,4 +444,8 @@ if __name__ == '__main__':
     # Load model on startup
     load_prediction_artifacts()
     
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    if __name__ == '__main__':
+    load_prediction_artifacts()
+    
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
